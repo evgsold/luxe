@@ -2,15 +2,26 @@ import type { Config } from 'tailwindcss';
 import defaultTheme from 'tailwindcss/defaultTheme';
 
 export default {
-  content: ['./src/**/*.{js,jsx,ts,tsx}'],
+  // Добавили пути на случай, если папки components/app лежат в корне или в src
+  content: [
+    './src/**/*.{js,jsx,ts,tsx}',
+    './app/**/*.{js,jsx,ts,tsx}',
+    './components/**/*.{js,jsx,ts,tsx}',
+  ],
   theme: {
     extend: {
       fontFamily: {
-        primary: ['Inter', ...defaultTheme.fontFamily.sans],
+        // Теперь font-sans (описание, кнопки, бейджи) тоже станет Intro Friday:
+        sans: ['var(--font-intro-friday)', '"Intro Friday"', ...defaultTheme.fontFamily.sans],
+        
+        // Заголовки (font-serif):
+        serif: ['var(--font-intro-friday)', '"Intro Friday"', ...defaultTheme.fontFamily.serif],
+        
+        primary: ['var(--font-intro-friday)', '"Intro Friday"', 'sans-serif'],
+        intro: ['var(--font-intro-friday)', '"Intro Friday"', 'sans-serif'],
       },
       colors: {
         primary: {
-          // Customize it on globals.css :root
           50: 'rgb(var(--tw-color-primary-50) / <alpha-value>)',
           100: 'rgb(var(--tw-color-primary-100) / <alpha-value>)',
           200: 'rgb(var(--tw-color-primary-200) / <alpha-value>)',

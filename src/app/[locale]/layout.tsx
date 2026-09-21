@@ -2,6 +2,7 @@ import { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getRequestConfig, setRequestLocale } from 'next-intl/server';
+import Footer from "@/components/layout/footer"
 
 import '@/styles/globals.css';
 
@@ -127,6 +128,7 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
             <SiteHeader locale={locale} />
             <main className="min-h-screen sm:px-0">{children}</main>
+            <Footer/>
         </NextIntlClientProvider>
       </body>
     </html>

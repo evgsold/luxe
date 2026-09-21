@@ -2,59 +2,36 @@
 
 "use client"
 
-import { Lightbulb, Lamp, Sun, Moon, Sparkles, Star, ShoppingBag, Heart, ArrowRight } from "lucide-react"
+import { ArrowRight, ArrowUpRight } from "lucide-react"
 import Link from "next/link"
 import { motion, Variants } from "framer-motion"
-import StructuredData from "@/components/StructuredData" // Предполагается, что у вас есть этот компонент
+import StructuredData from "@/components/StructuredData"
 
-// Тип данных для продукта. Экспортируется для использования в серверном компоненте.
 export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  oldPrice?: number;
-  description: string;
-  category: string;
-  inStock: boolean;
-  images: string[];
-  features: string[];
+  id: number
+  name: string
+  price: number
+  oldPrice?: number
+  description: string
+  category: string
+  inStock: boolean
+  images: string[]
+  features: string[]
   specifications: {
-    brand: string;
-    collection: string;
-    style: string;
-    room: string;
-    warranty: string;
-    country: string;
-  };
+    brand: string
+    collection: string
+    style: string
+    room: string
+    warranty: string
+    country: string
+  }
 }
 
-// Компонент принимает предварительно загруженные продукты через props
 export default function HomeClient({ products }: { products: Product[] }) {
-  // Вся логика загрузки данных (useState, useEffect) удалена.
-  // Компонент теперь отвечает только за отображение.
-
-  const clientBenefits = [
-    "Уникальный дизайн, созданный с помощью 3D-печати.",
-    "Экологичные материалы и энергоэффективные LED-технологии.",
-    "Гарантия качества и быстрая доставка по всей Беларуси.",
-  ]
-  const proBenefits = [
-    "Специальные условия и скидки для дизайнеров и архитекторов.",
-    "Возможность кастомизации светильников под ваш проект.",
-    "Доступ к 3D-моделям для использования в визуализациях.",
-  ]
-  const steps = [
-    "Выберите светильник",
-    "Оформите заказ",
-    "Выберите способ оплаты",
-    "Получите ваш заказ",
-    "Наслаждайтесь светом",
-  ]
-
   const websiteData = {
-    name: "3d fabriq - Каталог премиального 3D-печатного освещения",
+    name: "3d fabriq - Каталог авторского 3D-печатного освещения",
     description:
-      "Откройте для себя нашу коллекцию современных и уютных светильников, созданных с помощью 3D-печати. Преобразите свое пространство с помощью элегантных подвесных светильников, торшеров и уникальных решений для освещения.",
+      "Коллекция лаконичных светильников, созданных с помощью технологий 3D-печати. Экологичные материалы, чистые линии и мягкий свет.",
     url: "https://digitalfortress.vercel.app",
   }
 
@@ -64,43 +41,53 @@ export default function HomeClient({ products }: { products: Product[] }) {
     logo: "https://digitalfortress.vercel.app/logo.png",
   }
 
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.12, delayChildren: 0.2 },
-    },
-  }
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
+  const fadeIn: Variants = {
+    hidden: { opacity: 0, y: 16 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+      transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
     },
   }
 
-  const floatingVariants: Variants = {
-    animate: (i: number) => ({
-      y: [0, -15, 0],
-      transition: {
-        duration: 5 + (i || 0) * 1.5,
-        repeat: Number.POSITIVE_INFINITY,
-        ease: "easeInOut",
-      },
-    }),
+  const staggerContainer: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+    },
   }
 
-  const clientIcons = [Lightbulb, Star, Heart]
-  const proIcons = [Lamp, Sparkles, Sun]
-  const stepIcons = [ShoppingBag, Lightbulb, Star, Heart, Sparkles]
-
   const categories = [
-    { name: "Подвесные светильники", icon: Lightbulb },
-    { name: "Торшеры", icon: Lamp },
-    { name: "Настольные лампы", icon: Sun },
-    { name: "Настенные бра", icon: Moon },
+    { name: "Подвесные светильники", count: "Коллекция", href: "/catalog" },
+    { name: "Торшеры", count: "Коллекция", href: "/catalog" },
+    { name: "Настольные лампы", count: "Коллекция", href: "/catalog" },
+    { name: "Настенные бра", count: "Коллекция", href: "/catalog" },
+  ]
+
+  const values = [
+    {
+      num: "01",
+      title: "Параметрический дизайн",
+      desc: "Сложная биоморфическая пластика и мягкое рассеивание света, недостижимые в традиционном серийном производстве.",
+    },
+    {
+      num: "02",
+      title: "Экологичный биополимер",
+      desc: "Используем перерабатываемый растительный PLA-пластик и долговечные светодиодные компоненты с мягким спектром.",
+    },
+    {
+      num: "03",
+      title: "Локальное производство",
+      desc: "Каждое изделие печатается индивидуально, бережно вручную обрабатывается и отправляется напрямую из мастерской.",
+    },
+  ]
+
+  const processSteps = [
+    { step: "01", title: "Выбор формы", desc: "Подберите силуэт и температуру света в каталоге" },
+    { step: "02", title: "Печать и сборка", desc: "Изготавливаем изделие с контролем каждого слоя" },
+    { step: "03", title: "Тестирование", desc: "Проверяем электрику, качество диффузора и пакуем" },
+    { step: "04", title: "Доставка", desc: "Быстро отправляем заказ прямо до вашей двери" },
   ]
 
   return (
@@ -108,443 +95,217 @@ export default function HomeClient({ products }: { products: Product[] }) {
       <StructuredData type="WebSite" data={websiteData} />
       <StructuredData type="Organization" data={organizationData} />
 
-      <div className="min-h-screen pt-4 bg-[#FAF7F2] text-[#2C2416]">
+      <div className="min-h-screen bg-[#FAF7F2] text-[#2C2416] selection:bg-[#C17B5C]/20 selection:text-[#2C2416]">
         {/* Hero Section */}
-        <section className="relative min-h-[90vh] flex items-center justify-center px-4 sm:px-6 lg:px-8">
-          <div className="absolute inset-0 overflow-hidden">
-            <motion.div
-              className="absolute top-20 left-10 w-32 h-32 bg-[#C17B5C]/5 rounded-full blur-3xl"
-              custom={0}
-              variants={floatingVariants}
-              animate="animate"
-            />
-            <motion.div
-              className="absolute top-40 right-20 w-48 h-48 bg-[#E8DCC8]/10 rounded-full blur-3xl"
-              custom={1}
-              variants={floatingVariants}
-              animate="animate"
-            />
-            <motion.div
-              className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#E8DCC8]/10 rounded-full blur-3xl"
-              custom={2}
-              variants={floatingVariants}
-              animate="animate"
-            />
-          </div>
-
-          <div className="container mx-auto max-w-7xl relative z-10">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <section className="relative min-h-[92vh] flex items-center pt-24 pb-16 px-6 sm:px-10 lg:px-16 border-b border-[#E8DCC8]/60">
+          <div className="container mx-auto max-w-7xl">
+            <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+              
+              {/* Hero Text */}
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                className="lg:col-span-7 pr-0 lg:pr-8"
+                initial="hidden"
+                animate="visible"
+                variants={staggerContainer}
               >
-                <motion.div
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#E8DCC8]/50 text-[#2C2416] mb-6 rounded-full text-sm font-medium"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
+                <motion.span
+                  variants={fadeIn}
+                  className="inline-block text-xs uppercase tracking-[0.25em] text-[#C17B5C] font-semibold mb-6"
                 >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Новая коллекция 2025</span>
-                </motion.div>
+                  3D-Печатное освещение
+                </motion.span>
 
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-balance font-serif">
-                  Осветите Ваше
-                  <span className="block text-[#C17B5C] mt-2 z-10">Идеальное пространство</span>
-                </h1>
-
-                <p className="text-base sm:text-lg md:text-xl text-[#6B5D4F] mb-8 leading-relaxed max-w-xl text-pretty font-sans">
-                  Откройте для себя нашу тщательно подобранную коллекцию современных светильников, созданных, чтобы привнести тепло и элегантность в каждый уголок вашего дома.
-                </p>
-
-                <motion.div
-                  className="flex flex-col sm:flex-row gap-4"
-                  initial="hidden"
-                  animate="visible"
-                  variants={containerVariants}
+                <motion.h1
+                  variants={fadeIn}
+                  className="text-4xl sm:text-6xl lg:text-7xl font-light tracking-tight leading-[1.08] mb-8 font-serif"
                 >
-                  <motion.div variants={itemVariants}>
-                    <Link
-                      href="/catalog"
-                      className="group w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-[#FAF7F2] bg-[#C17B5C] hover:bg-[#A66A4D] transition-all duration-300 rounded-full shadow-lg hover:shadow-xl font-sans"
-                    >
-                      <span className="mr-2">Перейти в каталог</span>
-                      <motion.div
-                        animate={{ x: [0, 4, 0] }}
-                        transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-                      >
-                        <ArrowRight className="w-5 h-5" />
-                      </motion.div>
-                    </Link>
-                  </motion.div>
+                  Свет как форма <br />
+                  <span className="italic font-normal text-[#C17B5C]">современного уюта</span>
+                </motion.h1>
 
-                  <motion.div variants={itemVariants}>
-                    <Link
-                      href="/contact"
-                      className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-[#2C2416] bg-transparent border-2 border-[#E8DCC8] hover:bg-[#E8DCC8]/50 transition-all duration-300 rounded-full font-sans"
-                    >
-                      Консультация дизайнера
-                    </Link>
-                  </motion.div>
+                <motion.p
+                  variants={fadeIn}
+                  className="text-base sm:text-lg text-[#6B5D4F] leading-relaxed max-w-xl mb-10 font-sans font-normal"
+                >
+                  Коллекция лаконичных светильников, созданных методом аддитивного производства. 
+                  Чистая геометрия, теплый рассеянный свет и внимание к деталям.
+                </motion.p>
+
+                <motion.div variants={fadeIn} className="flex flex-wrap items-center gap-6">
+                  <Link
+                    href="/catalog"
+                    className="inline-flex items-center gap-3 px-8 py-3.5 bg-[#2C2416] text-[#FAF7F2] hover:bg-[#C17B5C] transition-colors duration-300 text-sm tracking-wide rounded-full font-sans"
+                  >
+                    <span>В каталог</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center text-sm font-medium text-[#2C2416] hover:text-[#C17B5C] transition-colors border-b border-[#2C2416]/30 pb-0.5 tracking-wide"
+                  >
+                    Связаться с нами
+                  </Link>
                 </motion.div>
               </motion.div>
 
+              {/* Hero Image */}
               <motion.div
-                className="relative hidden lg:block"
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="lg:col-span-5"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#E8DCC8]/30">
                   <img
-                    src="/uploads/Лампа 3_IMG_1394.JPG"
-                    alt="Современный подвесной светильник в уютной гостиной"
-                    className="w-full h-full object-cover"
+                    src="/uploads/image_0_0.jpg"
+                    alt="Светильник 3d fabriq"
+                    className="w-full h-full object-cover grayscale-[15%] hover:grayscale-0 transition-all duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#FAF7F2]/60 to-transparent" />
                 </div>
+              </motion.div>
 
-                <motion.div
-                  className="absolute -bottom-6 -left-6 bg-white border-2 border-[#E8DCC8] rounded-2xl p-4 sm:p-6 shadow-xl"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6, delay: 0.8 }}
+            </div>
+          </div>
+        </section>
+
+        {/* Categories Section */}
+        <section className="py-20 sm:py-28 px-6 sm:px-10 lg:px-16 border-b border-[#E8DCC8]/60">
+          <div className="container mx-auto max-w-7xl">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-16 gap-4">
+              <div>
+                <span className="text-xs uppercase tracking-[0.2em] text-[#8C7E72] block mb-2">Навигация</span>
+                <h2 className="text-2xl sm:text-3xl font-light font-serif">Категории изделий</h2>
+              </div>
+              <Link
+                href="/catalog"
+                className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-[#6B5D4F] hover:text-[#C17B5C] transition-colors"
+              >
+                Все модели <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {categories.map((cat, idx) => (
+                <Link
+                  key={idx}
+                  href={cat.href}
+                  className="group block p-8 rounded-xl bg-white/60 border border-[#E8DCC8]/70 hover:border-[#C17B5C]/60 hover:bg-white transition-all duration-300"
                 >
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className="p-2 sm:p-3 bg-[#C17B5C]/10 rounded-xl">
-                      <Lightbulb className="w-6 h-6 sm:w-8 sm:h-8 text-[#C17B5C]" />
-                    </div>
-                    <div>
-                      <div className="text-xs sm:text-sm text-[#6B5D4F] font-sans">Энергоэффективность</div>
-                      <div className="text-base sm:text-lg font-bold font-serif">LED Технологии</div>
-                    </div>
+                  <span className="text-xs text-[#8C7E72] block mb-6 font-mono">0{idx + 1}</span>
+                  <h3 className="text-lg font-medium text-[#2C2416] group-hover:text-[#C17B5C] transition-colors mb-2 font-serif">
+                    {cat.name}
+                  </h3>
+                  <div className="flex items-center justify-between text-xs text-[#8C7E72] pt-4 border-t border-[#E8DCC8]/40">
+                    <span>{cat.count}</span>
+                    <ArrowRight className="w-3.5 h-3.5 -translate-x-1 group-hover:translate-x-0 opacity-0 group-hover:opacity-100 transition-all" />
                   </div>
-                </motion.div>
-              </motion.div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Секция категорий */}
-        <section className="py-16 sm:py-24 bg-[#E8DCC8]/30">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              className="text-center mb-12 sm:mb-16"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-balance font-serif">Исследуйте наши коллекции</h2>
-              <p className="text-base sm:text-lg text-[#6B5D4F] max-w-2xl mx-auto text-pretty font-sans">
-                От ярких акцентов до утонченных деталей — найдите идеальное освещение для каждой комнаты.
-              </p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-              {categories.map((category, i) => {
-                const Icon = category.icon
-                return (
-                  <motion.div
-                    key={i}
-                    className="group relative bg-white border border-[#E8DCC8] p-6 sm:p-8 transition-all duration-500 hover:shadow-xl hover:-translate-y-2 rounded-2xl cursor-pointer"
-                    initial="hidden"
-                    whileInView="visible"
-                    variants={containerVariants}
-                    viewport={{ once: true }}
-                    custom={i}
-                  >
-                    <div className="relative z-10">
-                      <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-[#C17B5C]/10 mb-6 group-hover:bg-[#C17B5C]/20 transition-colors duration-300 rounded-xl">
-                        <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-[#C17B5C]" />
-                      </div>
-                      <h3 className="text-lg sm:text-xl font-bold mb-2 font-serif">{category.name}</h3>
-                      <div className="flex items-center text-[#C17B5C] font-medium text-sm group-hover:gap-2 transition-all font-sans">
-                        <span>Смотреть</span>
-                        <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })}
+        {/* Brand Values / Philosophy */}
+        <section className="py-24 sm:py-32 px-6 sm:px-10 lg:px-16 bg-[#F4EFEA] border-b border-[#E8DCC8]/60">
+          <div className="container mx-auto max-w-7xl">
+            <div className="max-w-xl mb-16 sm:mb-20">
+              <span className="text-xs uppercase tracking-[0.2em] text-[#8C7E72] block mb-2">Подход</span>
+              <h2 className="text-3xl sm:text-4xl font-light font-serif leading-tight">
+                Технологичность и лаконичная эстетика
+              </h2>
             </div>
-          </div>
-        </section>
 
-        {/* Секция преимуществ */}
-        <section className="py-16 sm:py-24 bg-[#FAF7F2]">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              className="text-center mb-12 sm:mb-16"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-balance font-serif">Почему выбирают 3d fabriq</h2>
-              <div className="w-24 h-1 bg-[#C17B5C] mx-auto rounded-full mt-6"></div>
-            </motion.div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                variants={containerVariants}
-                viewport={{ once: true }}
-                className="group relative bg-[#E8DCC8]/30 border border-[#E8DCC8] p-6 sm:p-10 transition-all duration-500 hover:shadow-xl rounded-3xl"
-              >
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="p-3 bg-[#C17B5C] rounded-xl">
-                      <Star className="w-6 h-6 sm:w-7 sm:h-7 text-[#FAF7F2]" />
-                    </div>
-                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold font-serif">Для вашего дома</h3>
-                  </div>
-                  <ul className="space-y-6">
-                    {clientBenefits.map((b, i) => {
-                      const Icon = clientIcons[i] || Lightbulb
-                      return (
-                        <motion.li key={i} className="flex items-start gap-4 text-sm sm:text-base" variants={itemVariants}>
-                          <div className="p-2 bg-[#C17B5C]/10 mt-1 flex-shrink-0 rounded-lg">
-                            <Icon className="w-5 h-5 text-[#C17B5C]" />
-                          </div>
-                          <span className="leading-relaxed font-medium font-sans">{b}</span>
-                        </motion.li>
-                      )
-                    })}
-                  </ul>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 sm:gap-10">
+              {values.map((val, idx) => (
+                <div key={idx} className="relative pt-6 border-t border-[#2C2416]/15">
+                  <span className="text-xs font-mono text-[#C17B5C] block mb-4">{val.num}</span>
+                  <h3 className="text-xl font-medium mb-3 font-serif">{val.title}</h3>
+                  <p className="text-sm text-[#6B5D4F] leading-relaxed font-sans">{val.desc}</p>
                 </div>
-              </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                variants={containerVariants}
-                viewport={{ once: true }}
-                className="group relative bg-[#C17B5C]/5 border border-[#C17B5C]/20 p-6 sm:p-10 transition-all duration-500 hover:shadow-xl rounded-3xl"
-              >
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="p-3 bg-[#C17B5C] rounded-xl">
-                      <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-[#FAF7F2]" />
-                    </div>
-                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold font-serif">Для дизайнеров</h3>
-                  </div>
-                  <ul className="space-y-6">
-                    {proBenefits.map((b, i) => {
-                      const Icon = proIcons[i] || Lamp
-                      return (
-                        <motion.li key={i} className="flex items-start gap-4 text-sm sm:text-base" variants={itemVariants}>
-                          <div className="p-2 bg-[#C17B5C]/10 mt-1 flex-shrink-0 rounded-lg">
-                            <Icon className="w-5 h-5 text-[#C17B5C]" />
-                          </div>
-                          <span className="leading-relaxed font-medium font-sans">{b}</span>
-                        </motion.li>
-                      )
-                    })}
-                  </ul>
+        {/* Process Steps */}
+        <section className="py-20 sm:py-28 px-6 sm:px-10 lg:px-16 border-b border-[#E8DCC8]/60">
+          <div className="container mx-auto max-w-7xl">
+            <div className="text-center max-w-lg mx-auto mb-16">
+              <span className="text-xs uppercase tracking-[0.2em] text-[#8C7E72] block mb-2">Процесс</span>
+              <h2 className="text-2xl sm:text-3xl font-light font-serif">Как мы создаем и отправляем заказ</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {processSteps.map((step, idx) => (
+                <div key={idx} className="relative">
+                  <span className="text-3xl font-light text-[#E8DCC8] block mb-3 font-serif">{step.step}</span>
+                  <h4 className="text-base font-medium mb-2 font-serif text-[#2C2416]">{step.title}</h4>
+                  <p className="text-xs sm:text-sm text-[#6B5D4F] leading-relaxed">{step.desc}</p>
                 </div>
-              </motion.div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Как это работает */}
-        <section className="py-16 sm:py-24 bg-[#E8DCC8]/30">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              className="text-center mb-12 sm:mb-16"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-balance font-serif">Простой процесс покупки</h2>
-              <div className="w-24 h-1 bg-[#C17B5C] mx-auto rounded-full mt-6"></div>
-            </motion.div>
+        {/* Popular Products */}
+        <section className="py-24 sm:py-32 px-6 sm:px-10 lg:px-16">
+          <div className="container mx-auto max-w-7xl">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-16 gap-4">
+              <div>
+                <span className="text-xs uppercase tracking-[0.2em] text-[#8C7E72] block mb-2">Избранное</span>
+                <h2 className="text-3xl sm:text-4xl font-light font-serif">Популярные модели</h2>
+              </div>
+              <Link
+                href="/catalog"
+                className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-[#6B5D4F] hover:text-[#C17B5C] transition-colors"
+              >
+                Весь каталог <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
-              {steps.map((step, i) => {
-                const Icon = stepIcons[i] || Star
-                return (
-                  <motion.div
-                    key={i}
-                    className="group relative bg-white border border-[#E8DCC8] p-6 sm:p-8 transition-all duration-500 text-center hover:shadow-xl hover:-translate-y-2 rounded-2xl"
-                    initial="hidden"
-                    whileInView="visible"
-                    variants={containerVariants}
-                    viewport={{ once: true }}
-                    custom={i}
-                  >
-                    <div className="relative z-10">
-                      <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-[#C17B5C]/10 mb-4 group-hover:bg-[#C17B5C]/20 transition-all duration-300 rounded-xl">
-                        <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-[#C17B5C]" />
-                      </div>
-                      <div className="text-xs font-bold text-[#C17B5C] mb-3 tracking-wider uppercase font-sans">
-                        Шаг {i + 1}
-                      </div>
-                      <p className="text-sm font-semibold leading-relaxed font-sans">{step}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products && products.length > 0 ? (
+                products.slice(0, 3).map((item) => (
+                  <Link key={item.id} href={`/catalog/${item.id}`} className="group block">
+                    <div className="aspect-[4/5] overflow-hidden rounded-xl bg-[#E8DCC8]/30 mb-5 relative">
+                      <img
+                        src={item.images[0] || "/placeholder.jpg"}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                      />
                     </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* Популярные товары */}
-        <section className="py-16 sm:py-24 bg-[#FAF7F2]">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              className="text-center mb-12 sm:mb-16"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-balance font-serif">Популярные светильники</h2>
-              <p className="text-base sm:text-lg text-[#6B5D4F] max-w-2xl mx-auto text-pretty font-sans">
-                Отобранные вручную хиты из нашей последней коллекции
-              </p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {products.length > 0 ? (
-                products.map((item, i) => (
-                  <motion.div
-                    key={item.id}
-                    className="group relative bg-white border border-[#E8DCC8] overflow-hidden transition-all duration-500 hover:shadow-2xl rounded-2xl cursor-pointer"
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: i * 0.1 }}
-                    viewport={{ once: true }}
-                  >
-                    <Link href={`/catalog/${item.id}`} passHref>
-                      <div className="aspect-[3/4] overflow-hidden">
-                        <img
-                          src={item.images[0] || "/placeholder.jpg"}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                      </div>
-                      <div className="p-6">
-                        <h3 className="text-lg sm:text-xl font-bold mb-2 font-serif">{item.name}</h3>
-                        <p className="text-sm text-[#6B5D4F] mb-4 font-sans h-10 overflow-hidden line-clamp-2">{item.description}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xl sm:text-2xl font-bold text-[#C17B5C] font-serif">{item.price} Br</span>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
+                    
+                  </Link>
                 ))
               ) : (
-                <div className="col-span-full text-center py-10">
-                  <p className="text-[#6B5D4F]">Популярные товары в данный момент не найдены.</p>
+                <div className="col-span-full text-center py-16 text-[#8C7E72] text-sm">
+                  Товары скоро появятся в каталоге.
                 </div>
               )}
             </div>
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="py-20 sm:py-24 bg-[#C17B5C] text-[#FAF7F2] relative overflow-hidden">
-          <div className="absolute inset-0">
-            <motion.div
-              className="absolute top-10 left-10 w-64 h-64 bg-[#FAF7F2]/5 rounded-full blur-3xl"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-              transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-            />
-            <motion.div
-              className="absolute bottom-10 right-10 w-80 h-80 bg-[#FAF7F2]/5 rounded-full blur-3xl"
-              animate={{ scale: [1.2, 1, 1.2], opacity: [0.5, 0.3, 0.5] }}
-              transition={{
-                duration: 8,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "easeInOut",
-                delay: 4,
-              }}
-            />
-          </div>
-
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <motion.h2
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-balance font-serif"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
+        {/* Minimalist CTA */}
+        <section className="py-24 sm:py-28 px-6 sm:px-10 lg:px-16 bg-[#C17B5C] text-[#FAF7F2]">
+          <div className="container mx-auto max-w-4xl text-center">
+            <h2 className="text-3xl sm:text-5xl font-light font-serif leading-tight mb-6">
+              Создайте мягкую атмосферу <br />
+              <span className="italic text-[#E8DCC8]">в вашем доме</span>
+            </h2>
+            <p className="text-sm sm:text-base text-[#FAF7F2]/70 max-w-md mx-auto mb-10 leading-relaxed font-sans">
+              Каждый светильник изготавливается под заказ с вниманием к чистоте линий и балансу света.
+            </p>
+            <Link
+              href="/catalog"
+              className="inline-flex items-center gap-3 px-8 py-3.5 bg-[#FAF7F2] text-[#2C2416] hover:bg-[#C17B5C] hover:text-[#FAF7F2] transition-colors duration-300 text-sm tracking-wide rounded-full font-sans"
             >
-              Готовы преобразить ваше пространство?
-            </motion.h2>
-
-            <motion.p
-              className="text-base sm:text-lg md:text-xl mb-12 max-w-3xl mx-auto leading-relaxed text-[#FAF7F2]/90 text-pretty font-sans"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              Присоединяйтесь к тысячам довольных клиентов, которые улучшили свои дома с помощью наших премиальных решений для освещения.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              viewport={{ once: true }}
-            >
-              <Link
-                href="/catalog"
-                className="inline-flex items-center justify-center px-10 py-3 sm:px-12 sm:py-4 text-base sm:text-lg font-semibold text-[#C17B5C] bg-[#FAF7F2] hover:bg-[#FAF7F2]/90 transition-all duration-300 rounded-full shadow-2xl hover:shadow-3xl font-sans"
-              >
-                <span className="mr-2">Начать покупки</span>
-                <motion.div animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}>
-                  <ArrowRight className="w-5 h-5" />
-                </motion.div>
-              </Link>
-            </motion.div>
+              <span>Перейти в каталог</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </section>
-
-        {/* Footer */}
-        <footer className="py-16 bg-[#E8DCC8]/30 border-t border-[#E8DCC8]">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              className="flex flex-col items-center gap-6 text-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-[#C17B5C] rounded-xl">
-                  <Lightbulb className="w-6 h-6 text-[#FAF7F2]" />
-                </div>
-                <span className="text-2xl font-bold font-serif">3d fabriq</span>
-              </div>
-              <p className="text-sm sm:text-base text-[#6B5D4F] leading-relaxed max-w-2xl text-pretty font-sans">
-                Освещаем дома со стилем и изысканностью. Качественное исполнение, вечный дизайн и исключительное обслуживание клиентов.
-              </p>
-              <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-[#6B5D4F] font-sans">
-                <Link href="#" className="hover:text-[#C17B5C] transition-colors">
-                  О нас
-                </Link>
-                <Link href="/catalog" className="hover:text-[#C17B5C] transition-colors">
-                  Коллекции
-                </Link>
-                <Link href="/contact" className="hover:text-[#C17B5C] transition-colors">
-                  Контакты
-                </Link>
-                <Link href="#" className="hover:text-[#C17B5C] transition-colors">
-                  Поддержка
-                </Link>
-              </div>
-              <div className="w-16 h-1 bg-[#C17B5C] rounded-full mt-4"></div>
-              <p className="text-xs text-[#6B5D4F] font-sans">© 2025 3d fabriq. Все права защищены.</p>
-            </motion.div>
-          </div>
-        </footer>
       </div>
     </>
   )
