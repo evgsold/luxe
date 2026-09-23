@@ -1,5 +1,6 @@
 import { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
+import localFont from "next/font/local"
 import { NextIntlClientProvider } from 'next-intl';
 import { getRequestConfig, setRequestLocale } from 'next-intl/server';
 import Footer from "@/components/layout/footer"
@@ -79,6 +80,31 @@ export async function generateMetadata({ params: { locale } }: { params: { local
   };
 }
 
+const introFriday = localFont({
+  src: [
+    {
+      path: "../../../public/fonts/IntroFriday.ttf", // укажите путь к вашему файлу Intro Friday (woff2/ttf/otf)
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-intro-friday",
+  display: "swap",
+})
+
+// Шрифт для всего остального текста
+const patefon = localFont({
+  src: [
+    {
+      path: "../../../public/fonts/Patefon.ttf", // путь к файлу Patefon.ttf
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-patefon",
+  display: "swap",
+})
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -123,7 +149,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
       </head>
-      <body>
+      <body className="font-sans bg-[#FAF7F2] text-[#2C2416] antialiased">
         <GoogleAnalytics />
         <NextIntlClientProvider locale={locale} messages={messages}>
             <SiteHeader locale={locale} />

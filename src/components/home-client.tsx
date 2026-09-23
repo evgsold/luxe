@@ -110,14 +110,14 @@ export default function HomeClient({ products }: { products: Product[] }) {
               >
                 <motion.span
                   variants={fadeIn}
-                  className="inline-block text-xs uppercase tracking-[0.25em] text-[#C17B5C] font-semibold mb-6"
+                  className="inline-block text-sm uppercase tracking-[0.25em] text-[#C17B5C] font-semibold mb-6"
                 >
                   3D-Печатное освещение
                 </motion.span>
 
                 <motion.h1
                   variants={fadeIn}
-                  className="text-4xl sm:text-6xl lg:text-7xl font-light tracking-tight leading-[1.08] mb-8 font-serif"
+                  className="text-5xl sm:text-6xl lg:text-7xl font-light tracking-tight leading-[1.08] mb-8 font-serif"
                 >
                   Свет как форма <br />
                   <span className="italic font-normal text-[#C17B5C]">современного уюта</span>
@@ -125,7 +125,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
 
                 <motion.p
                   variants={fadeIn}
-                  className="text-base sm:text-lg text-[#6B5D4F] leading-relaxed max-w-xl mb-10 font-sans font-normal"
+                  className="text-lg sm:text-xl text-[#6B5D4F] leading-relaxed max-w-xl mb-10 font-sans font-normal"
                 >
                   Коллекция лаконичных светильников, созданных методом аддитивного производства. 
                   Чистая геометрия, теплый рассеянный свет и внимание к деталям.
@@ -134,7 +134,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
                 <motion.div variants={fadeIn} className="flex flex-wrap items-center gap-6">
                   <Link
                     href="/catalog"
-                    className="inline-flex items-center gap-3 px-8 py-3.5 bg-[#2C2416] text-[#FAF7F2] hover:bg-[#C17B5C] transition-colors duration-300 text-sm tracking-wide rounded-full font-sans"
+                    className="inline-flex items-center gap-3 px-9 py-4 bg-[#2C2416] text-[#FAF7F2] hover:bg-[#C17B5C] transition-colors duration-300 text-base tracking-wide rounded-full font-sans"
                   >
                     <span>В каталог</span>
                     <ArrowRight className="w-4 h-4" />
@@ -142,7 +142,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
 
                   <Link
                     href="/contact"
-                    className="inline-flex items-center text-sm font-medium text-[#2C2416] hover:text-[#C17B5C] transition-colors border-b border-[#2C2416]/30 pb-0.5 tracking-wide"
+                    className="inline-flex items-center text-base font-medium text-[#2C2416] hover:text-[#C17B5C] transition-colors border-b border-[#2C2416]/30 pb-0.5 tracking-wide"
                   >
                     Связаться с нами
                   </Link>
@@ -174,14 +174,14 @@ export default function HomeClient({ products }: { products: Product[] }) {
           <div className="container mx-auto max-w-7xl">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-16 gap-4">
               <div>
-                <span className="text-xs uppercase tracking-[0.2em] text-[#8C7E72] block mb-2">Навигация</span>
-                <h2 className="text-2xl sm:text-3xl font-light font-serif">Категории изделий</h2>
+                <span className="text-sm uppercase tracking-[0.2em] text-[#8C7E72] block mb-2 font-mono">Навигация</span>
+                <h2 className="text-3xl sm:text-4xl font-light font-serif">Категории изделий</h2>
               </div>
               <Link
                 href="/catalog"
-                className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-[#6B5D4F] hover:text-[#C17B5C] transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm uppercase tracking-wider text-[#6B5D4F] hover:text-[#C17B5C] transition-colors"
               >
-                Все модели <ArrowUpRight className="w-3.5 h-3.5" />
+                Все модели <ArrowUpRight className="w-4 h-4" />
               </Link>
             </div>
 
@@ -192,13 +192,13 @@ export default function HomeClient({ products }: { products: Product[] }) {
                   href={cat.href}
                   className="group block p-8 rounded-xl bg-white/60 border border-[#E8DCC8]/70 hover:border-[#C17B5C]/60 hover:bg-white transition-all duration-300"
                 >
-                  <span className="text-xs text-[#8C7E72] block mb-6 font-mono">0{idx + 1}</span>
-                  <h3 className="text-lg font-medium text-[#2C2416] group-hover:text-[#C17B5C] transition-colors mb-2 font-serif">
+                  <span className="text-sm text-[#8C7E72] block mb-6 font-mono">0{idx + 1}</span>
+                  <h3 className="text-xl font-medium text-[#2C2416] group-hover:text-[#C17B5C] transition-colors mb-2 font-serif">
                     {cat.name}
                   </h3>
-                  <div className="flex items-center justify-between text-xs text-[#8C7E72] pt-4 border-t border-[#E8DCC8]/40">
+                  <div className="flex items-center justify-between text-sm text-[#8C7E72] pt-4 border-t border-[#E8DCC8]/40">
                     <span>{cat.count}</span>
-                    <ArrowRight className="w-3.5 h-3.5 -translate-x-1 group-hover:translate-x-0 opacity-0 group-hover:opacity-100 transition-all" />
+                    <ArrowRight className="w-4 h-4 -translate-x-1 group-hover:translate-x-0 opacity-0 group-hover:opacity-100 transition-all" />
                   </div>
                 </Link>
               ))}
@@ -210,8 +210,8 @@ export default function HomeClient({ products }: { products: Product[] }) {
         <section className="py-24 sm:py-32 px-6 sm:px-10 lg:px-16 bg-[#F4EFEA] border-b border-[#E8DCC8]/60">
           <div className="container mx-auto max-w-7xl">
             <div className="max-w-xl mb-16 sm:mb-20">
-              <span className="text-xs uppercase tracking-[0.2em] text-[#8C7E72] block mb-2">Подход</span>
-              <h2 className="text-3xl sm:text-4xl font-light font-serif leading-tight">
+              <span className="text-sm uppercase tracking-[0.2em] text-[#8C7E72] block mb-2 font-mono">Подход</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-light font-serif leading-tight">
                 Технологичность и лаконичная эстетика
               </h2>
             </div>
@@ -219,9 +219,9 @@ export default function HomeClient({ products }: { products: Product[] }) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 sm:gap-10">
               {values.map((val, idx) => (
                 <div key={idx} className="relative pt-6 border-t border-[#2C2416]/15">
-                  <span className="text-xs font-mono text-[#C17B5C] block mb-4">{val.num}</span>
-                  <h3 className="text-xl font-medium mb-3 font-serif">{val.title}</h3>
-                  <p className="text-sm text-[#6B5D4F] leading-relaxed font-sans">{val.desc}</p>
+                  <span className="text-sm font-mono text-[#C17B5C] block mb-4">{val.num}</span>
+                  <h3 className="text-2xl font-medium mb-3 font-serif">{val.title}</h3>
+                  <p className="text-base text-[#6B5D4F] leading-relaxed font-sans">{val.desc}</p>
                 </div>
               ))}
             </div>
@@ -232,16 +232,16 @@ export default function HomeClient({ products }: { products: Product[] }) {
         <section className="py-20 sm:py-28 px-6 sm:px-10 lg:px-16 border-b border-[#E8DCC8]/60">
           <div className="container mx-auto max-w-7xl">
             <div className="text-center max-w-lg mx-auto mb-16">
-              <span className="text-xs uppercase tracking-[0.2em] text-[#8C7E72] block mb-2">Процесс</span>
-              <h2 className="text-2xl sm:text-3xl font-light font-serif">Как мы создаем и отправляем заказ</h2>
+              <span className="text-sm uppercase tracking-[0.2em] text-[#8C7E72] block mb-2 font-mono">Процесс</span>
+              <h2 className="text-3xl sm:text-4xl font-light font-serif">Как мы создаем и отправляем заказ</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {processSteps.map((step, idx) => (
                 <div key={idx} className="relative">
-                  <span className="text-3xl font-light text-[#E8DCC8] block mb-3 font-serif">{step.step}</span>
-                  <h4 className="text-base font-medium mb-2 font-serif text-[#2C2416]">{step.title}</h4>
-                  <p className="text-xs sm:text-sm text-[#6B5D4F] leading-relaxed">{step.desc}</p>
+                  <span className="text-4xl font-light text-[#E8DCC8] block mb-3 font-serif">{step.step}</span>
+                  <h4 className="text-lg font-medium mb-2 font-serif text-[#2C2416]">{step.title}</h4>
+                  <p className="text-sm sm:text-base text-[#6B5D4F] leading-relaxed">{step.desc}</p>
                 </div>
               ))}
             </div>
@@ -253,14 +253,14 @@ export default function HomeClient({ products }: { products: Product[] }) {
           <div className="container mx-auto max-w-7xl">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-16 gap-4">
               <div>
-                <span className="text-xs uppercase tracking-[0.2em] text-[#8C7E72] block mb-2">Избранное</span>
-                <h2 className="text-3xl sm:text-4xl font-light font-serif">Популярные модели</h2>
+                <span className="text-sm uppercase tracking-[0.2em] text-[#8C7E72] block mb-2 font-mono">Избранное</span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-light font-serif">Популярные модели</h2>
               </div>
               <Link
                 href="/catalog"
-                className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-[#6B5D4F] hover:text-[#C17B5C] transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm uppercase tracking-wider text-[#6B5D4F] hover:text-[#C17B5C] transition-colors"
               >
-                Весь каталог <ArrowRight className="w-3.5 h-3.5" />
+                Весь каталог <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
@@ -275,11 +275,10 @@ export default function HomeClient({ products }: { products: Product[] }) {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                       />
                     </div>
-                    
                   </Link>
                 ))
               ) : (
-                <div className="col-span-full text-center py-16 text-[#8C7E72] text-sm">
+                <div className="col-span-full text-center py-16 text-[#8C7E72] text-base">
                   Товары скоро появятся в каталоге.
                 </div>
               )}
@@ -290,16 +289,16 @@ export default function HomeClient({ products }: { products: Product[] }) {
         {/* Minimalist CTA */}
         <section className="py-24 sm:py-28 px-6 sm:px-10 lg:px-16 bg-[#C17B5C] text-[#FAF7F2]">
           <div className="container mx-auto max-w-4xl text-center">
-            <h2 className="text-3xl sm:text-5xl font-light font-serif leading-tight mb-6">
+            <h2 className="text-4xl sm:text-6xl font-light font-serif leading-tight mb-6">
               Создайте мягкую атмосферу <br />
               <span className="italic text-[#E8DCC8]">в вашем доме</span>
             </h2>
-            <p className="text-sm sm:text-base text-[#FAF7F2]/70 max-w-md mx-auto mb-10 leading-relaxed font-sans">
+            <p className="text-base sm:text-lg text-[#FAF7F2]/85 max-w-md mx-auto mb-10 leading-relaxed font-sans">
               Каждый светильник изготавливается под заказ с вниманием к чистоте линий и балансу света.
             </p>
             <Link
               href="/catalog"
-              className="inline-flex items-center gap-3 px-8 py-3.5 bg-[#FAF7F2] text-[#2C2416] hover:bg-[#C17B5C] hover:text-[#FAF7F2] transition-colors duration-300 text-sm tracking-wide rounded-full font-sans"
+              className="inline-flex items-center gap-3 px-9 py-4 bg-[#FAF7F2] text-[#2C2416] hover:bg-[#2C2416] hover:text-[#FAF7F2] transition-colors duration-300 text-base tracking-wide rounded-full font-sans"
             >
               <span>Перейти в каталог</span>
               <ArrowRight className="w-4 h-4" />

@@ -1,8 +1,9 @@
+// tailwind.config.ts
+
 import type { Config } from 'tailwindcss';
 import defaultTheme from 'tailwindcss/defaultTheme';
 
 export default {
-  // Добавили пути на случай, если папки components/app лежат в корне или в src
   content: [
     './src/**/*.{js,jsx,ts,tsx}',
     './app/**/*.{js,jsx,ts,tsx}',
@@ -11,14 +12,19 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Теперь font-sans (описание, кнопки, бейджи) тоже станет Intro Friday:
-        sans: ['var(--font-intro-friday)', '"Intro Friday"', ...defaultTheme.fontFamily.sans],
+        // Основной шрифт по умолчанию -> Patefon
+        sans: ['var(--font-patefon)', '"Patefon"', ...defaultTheme.fontFamily.sans],
         
-        // Заголовки (font-serif):
+        // font-primary (который вызывается в globals.css) -> Patefon:
+        primary: ['var(--font-patefon)', '"Patefon"', 'sans-serif'],
+        
+        // Заголовки (font-serif) -> Intro Friday:
         serif: ['var(--font-intro-friday)', '"Intro Friday"', ...defaultTheme.fontFamily.serif],
         
-        primary: ['var(--font-intro-friday)', '"Intro Friday"', 'sans-serif'],
+        // Дополнительные алиасы
+        heading: ['var(--font-intro-friday)', '"Intro Friday"', 'sans-serif'],
         intro: ['var(--font-intro-friday)', '"Intro Friday"', 'sans-serif'],
+        patefon: ['var(--font-patefon)', '"Patefon"', 'sans-serif'],
       },
       colors: {
         primary: {
