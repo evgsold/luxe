@@ -160,12 +160,12 @@ export default function ContactPage() {
                 {/* Телефон */}
                 <button
                   type="button"
-                  onClick={() => copyToClipboard("+375 (99) 123-45-67", "Телефон")}
+                  onClick={() => copyToClipboard("+375259256239", "Телефон")}
                   className="w-full flex items-center justify-between p-4 bg-white/70 hover:bg-white border border-[#E8DCC8] rounded-xl transition-all group text-left"
                 >
                   <div className="flex items-center gap-3">
                     <Phone className="w-4 h-4 text-[#C17B5C]" />
-                    <span className="text-sm font-medium text-[#2C2416]">+375 (99) 123-45-67</span>
+                    <span className="text-sm font-medium text-[#2C2416]">+375 (25) 925-62-39</span>
                   </div>
                   <span className="text-xs font-mono text-[#8C7E72] group-hover:text-[#C17B5C] transition-colors">
                     {copied === "Телефон" ? "Скопировано" : "Скопировать"}

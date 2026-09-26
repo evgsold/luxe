@@ -20,6 +20,9 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
+    serverActions: {
+      bodySizeLimit: '10mb', // Лимит до 10 МБ на файл
+    },
   },
   compress: true,
   poweredByHeader: false,

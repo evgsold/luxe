@@ -106,20 +106,6 @@ export default function Footer() {
                 </span>
               </Link>
 
-              {/* Email */}
-              <a
-                href="mailto:3dfabriq@mail.ru"
-                className="flex items-center justify-between text-[#6B5D4F] hover:text-[#C17B5C] transition-colors py-1 group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Mail className="w-3.5 h-3.5 text-[#C17B5C]" />
-                  <span>Email</span>
-                </div>
-                <span className="text-xs font-mono text-[#8C7E72] group-hover:text-[#C17B5C]">
-                  3dfabriq@mail.ru
-                </span>
-              </a>
-
             </div>
           </div>
 

@@ -4,7 +4,9 @@
     "name": "Ваза 'Баскет'",
     "category": "decor",
     "price": 120,
-    "images": ["/uploads/image_0_0.jpg"],
+    "images": [
+      "/uploads/image_0_0.jpg"
+    ],
     "inStock": true,
     "description": "Сложная плетеная геометрия с объемным рельефом. Выразительный акцент для сухих букетов или как самостоятельная скульптурная форма.",
     "features": [
@@ -25,7 +27,9 @@
     "name": "Ваза 'Трансформер'",
     "category": "decor",
     "price": 50,
-    "images": ["/uploads/image_0_1.jpg"],
+    "images": [
+      "/uploads/image_0_1.jpg"
+    ],
     "inStock": true,
     "description": "Динамичные грани и строгие граненые грани создают игру светотени при любом угле обзора.",
     "features": [
@@ -46,7 +50,9 @@
     "name": "Скульптура-ваза 'Сердце'",
     "category": "decor",
     "price": 50,
-    "images": ["/uploads/image_0_2.jpg"],
+    "images": [
+      "/uploads/image_0_2.jpg"
+    ],
     "inStock": true,
     "description": "Анатомически вдохновленный арт-объект с плавными линиями. Символичный и эффектный акцент для интерьера.",
     "features": [
@@ -67,7 +73,9 @@
     "name": "Ваза 'Сфера'",
     "category": "decor",
     "price": 60,
-    "images": ["/uploads/image_0_3.jpg"],
+    "images": [
+      "/uploads/image_0_3.jpg"
+    ],
     "inStock": true,
     "description": "Классическая округлая форма, переосмысленная через ритмичные горизонтальные слои печати.",
     "features": [
@@ -88,7 +96,9 @@
     "name": "Ваза 'Буфо'",
     "category": "decor",
     "price": 60,
-    "images": ["/uploads/image_0_4.jpg"],
+    "images": [
+      "/uploads/image_0_4.jpg"
+    ],
     "inStock": true,
     "description": "Пышный бионический силуэт с мягкими волнообразными складками, создающий ощущение уюта и тепла.",
     "features": [
@@ -109,7 +119,9 @@
     "name": "Ваза 'Спринг Классик'",
     "category": "decor",
     "price": 70,
-    "images": ["/uploads/image_0_5.jpg"],
+    "images": [
+      "/uploads/image_0_5.jpg"
+    ],
     "inStock": true,
     "description": "Спиралевидный узор, напоминающий сжатую пружину в движении. Легкая и упругая визуальная ритмика.",
     "features": [
@@ -130,7 +142,9 @@
     "name": "Ваза 'Витраж'",
     "category": "decor",
     "price": 50,
-    "images": ["/uploads/image_0_6.jpg"],
+    "images": [
+      "/uploads/image_0_6.jpg"
+    ],
     "inStock": true,
     "description": "Сетка из тонких полигональных ячеек, напоминающая витражные оконные переплеты в современном исполнении.",
     "features": [
@@ -151,7 +165,9 @@
     "name": "Интерьерная ель 'Классико'",
     "category": "decor",
     "price": 80,
-    "images": ["/uploads/image_0_7.jpg"],
+    "images": [
+      "/uploads/image_0_7.jpg"
+    ],
     "inStock": true,
     "description": "Стилизованная геометрическая ель для круглогодичного или сезонного декора рабочего стола и полок.",
     "features": [
@@ -172,7 +188,9 @@
     "name": "Ваза 'Вейв'",
     "category": "decor",
     "price": 50,
-    "images": ["/uploads/image_0_8.jpg"],
+    "images": [
+      "/uploads/image_0_8.jpg"
+    ],
     "inStock": true,
     "description": "Плавные вертикальные гребни имитируют морские волны, плавно расширяясь от основания к горловине.",
     "features": [
@@ -193,7 +211,9 @@
     "name": "Ваза 'Дрил'",
     "category": "decor",
     "price": 50,
-    "images": ["/uploads/image_0_9.jpg"],
+    "images": [
+      "/uploads/image_0_9.jpg"
+    ],
     "inStock": true,
     "description": "Винтовая конусообразная форма с острыми гранями, создающая строгий технологичный силуэт.",
     "features": [
@@ -214,7 +234,9 @@
     "name": "Пиала-подсвечник 'Лотос'",
     "category": "decor",
     "price": 20,
-    "images": ["/uploads/image_0_10.jpg"],
+    "images": [
+      "/uploads/image_0_10.jpg"
+    ],
     "inStock": true,
     "description": "Компактная чаша в виде раскрывающихся лепестков. Подходит для хранения украшений, ключей или чайных свечей.",
     "features": [
@@ -235,7 +257,9 @@
     "name": "Ваза 'Ананас'",
     "category": "decor",
     "price": 60,
-    "images": ["/uploads/image_0_11.jpg"],
+    "images": [
+      "/uploads/image_0_11.jpg"
+    ],
     "inStock": true,
     "description": "Объемный рельеф из ромбовидных сегментов, напоминающий фактуру тропического фрукта в лаконичной подаче.",
     "features": [
@@ -256,7 +280,9 @@
     "name": "Ваза 'Медуза'",
     "category": "decor",
     "price": 60,
-    "images": ["/uploads/image_0_12.jpg"],
+    "images": [
+      "/uploads/image_0_12.jpg"
+    ],
     "inStock": true,
     "description": "Органический куполообразный силуэт с легким сужением к основанию. Доступна в базовом и шелковистом полимере.",
     "features": [
@@ -277,7 +303,9 @@
     "name": "Арт-сет 'Микро челиксы'",
     "category": "decor",
     "price": 90,
-    "images": ["/uploads/image_0_13.jpg"],
+    "images": [
+      "/uploads/image_0_13.jpg"
+    ],
     "inStock": true,
     "description": "Коллекционный сет миниатюрных фигурок с характером. Отлично дополняют полки с книгами и рабочие пространства.",
     "features": [
@@ -298,7 +326,9 @@
     "name": "Ваза 'Брумо'",
     "category": "decor",
     "price": 60,
-    "images": ["/uploads/image_0_14.jpg"],
+    "images": [
+      "/uploads/image_0_14.jpg"
+    ],
     "inStock": true,
     "description": "Монументальная форма с плавными горизонтальными расширениями. Визуально уравновешивает пространство.",
     "features": [
@@ -319,7 +349,9 @@
     "name": "Ваза 'Пикси'",
     "category": "decor",
     "price": 60,
-    "images": ["/uploads/image_0_15.jpg"],
+    "images": [
+      "/uploads/image_0_15.jpg"
+    ],
     "inStock": true,
     "description": "Изящная и миниатюрная форма с легким изгибом. Создана для одного акцентного цветка или тонких трав.",
     "features": [
@@ -340,7 +372,9 @@
     "name": "Ваза 'Восточная'",
     "category": "decor",
     "price": 150,
-    "images": ["/uploads/image_0_16.jpg"],
+    "images": [
+      "/uploads/image_0_16.jpg"
+    ],
     "inStock": true,
     "description": "Крупное интерьерное изделие с силуэтом традиционных восточных амфор, исполненное в прогрессивном 3D-формате.",
     "features": [
@@ -361,7 +395,9 @@
     "name": "Ваза 'Силк'",
     "category": "decor",
     "price": 50,
-    "images": ["/uploads/image_0_17.jpg"],
+    "images": [
+      "/uploads/image_0_17.jpg"
+    ],
     "inStock": true,
     "description": "Текстура изделия напоминает струящиеся шелковые складки, которые переливаются на свету мягким градиентом.",
     "features": [
@@ -382,7 +418,9 @@
     "name": "Светильник-ваза 'Лайтнинг'",
     "category": "decor",
     "price": 75,
-    "images": ["/uploads/image_0_18.jpg"],
+    "images": [
+      "/uploads/image_0_18.jpg"
+    ],
     "inStock": true,
     "description": "Зигзагообразные ломаные ребра создают драматичный светотеневой рисунок. Подходит как ваза или корпус под светодиодную подсветку.",
     "features": [
@@ -403,7 +441,9 @@
     "name": "Кашпо-ваза 'Кьюб'",
     "category": "decor",
     "price": 90,
-    "images": ["/uploads/image_0_19.jpg"],
+    "images": [
+      "/uploads/image_0_19.jpg"
+    ],
     "inStock": true,
     "description": "Кубическая архитектурная форма с внутренним переходом в округлую чашу. Идеально подходит для строгих интерьеров.",
     "features": [
@@ -420,13 +460,14 @@
     }
   },
   {
-    "id": 21,
     "name": "Ваза 'Сеть'",
     "category": "decor",
     "price": 120,
-    "images": ["/uploads/image_0_20.jpg"],
     "inStock": true,
     "description": "Сложная ячеистая структура с двойными стенками. Вершина возможностей параметрической 3D-печати.",
+    "images": [
+      "/uploads/image_0_20.jpg"
+    ],
     "features": [
       "Материал: Прочный биополимер",
       "Двойная сетчатая структура",
@@ -438,6 +479,7 @@
       "collection": "Complex",
       "style": "Био-тек, Параметрика",
       "room": "Гостиная, Прихожая, Зал"
-    }
+    },
+    "id": 21
   }
 ]

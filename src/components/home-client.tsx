@@ -18,12 +18,12 @@ export interface Product {
   images: string[]
   features: string[]
   specifications: {
-    brand: string
-    collection: string
-    style: string
-    room: string
-    warranty: string
-    country: string
+    brand?: string
+    collection?: string
+    style?: string
+    room?: string
+    warranty?: string
+    country?: string
   }
 }
 

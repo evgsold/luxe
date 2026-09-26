@@ -6,23 +6,23 @@ import Link from 'next/link'; // 1. Импортируем Link
 
 // --- Типы данных (остаются без изменений) ---
 interface Product {
-  id: number;
-  name: string;
-  price: number;
-  oldPrice?: number;
-  description: string;
-  category: string;
-  inStock: boolean;
-  images: string[];
-  features: string[];
+  id: number
+  name: string
+  price: number
+  oldPrice?: number
+  description: string
+  category: string
+  inStock: boolean
+  images: string[]
+  features: string[]
   specifications: {
-    brand: string;
-    collection: string;
-    style: string;
-    room: string;
-    warranty: string;
-    country: string;
-  };
+    brand?: string
+    collection?: string
+    style?: string
+    room?: string
+    warranty?: string
+    country?: string
+  }
 }
 
 interface CatalogProps {
