@@ -1,555 +1,1149 @@
-// src/app/[locale]/admin/page.tsx
-'use client';
+import { headers } from 'next/headers'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  ImagePlus,
+  LogOut,
+  MessageSquare,
+  Pencil,
+  ShieldCheck,
+  Star,
+  Trash2,
+  X,
+} from 'lucide-react'
+import {
+  approveAllPendingReviews,
+  bulkApplyDiscount,
+  bulkDeleteProducts,
+  bulkResetDiscount,
+  bulkUpdateCategory,
+  bulkUpdateStock,
+  createProduct,
+  deleteProduct,
+  deleteProductImage,
+  deleteReview,
+  duplicateProduct,
+  getAdminReviews,
+  getAdminSession,
+  getAllProducts,
+  getCatalogStats,
+  getProductById,
+  loginAdmin,
+  logoutAdmin,
+  makePrimaryProductImage,
+  moderateReview,
+  toggleProductStock,
+  updateProduct,
+} from '@/actions/products'
+import {
+  BulkSubmitButton,
+  ConfirmButton,
+  SelectAllCheckbox,
+  SubmitButton,
+} from '@/components/admin-controls'
 
-import { useEffect, useState, useMemo } from 'react';
-import { Product } from '@/types/data';
-import { getProducts, deleteProduct, toggleProductStock, duplicateProduct } from './products-actions';
-import ProductForm from './ProductForm';
-import { logoutAction } from './actions';
+export const dynamic = 'force-dynamic'
 
-type ViewMode = 'table' | 'grid';
-type StockFilter = 'all' | 'inStock' | 'outOfStock';
+async function getLocaleAdminPath(formData?: FormData): Promise<string> {
+  const fromForm = String(formData?.get('locale') ?? '').replace(/[^a-zA-Z-]/g, '')
+  if (fromForm) return `/${fromForm}/admin`
 
-export default function AdminDashboardPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const hdrs = await headers()
+  const intlLocale = hdrs.get('x-next-intl-locale')?.replace(/[^a-zA-Z-]/g, '')
+  if (intlLocale) return `/${intlLocale}/admin`
 
-  // Фильтры и поиск
-  const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [stockFilter, setStockFilter] = useState<StockFilter>('all');
-  const [sortBy, setSortBy] = useState<'id-desc' | 'price-asc' | 'price-desc' | 'name'>('id-desc');
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
-
-  // Модалка/Шторка редактирования
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
-  // Всплывающее уведомление (Toast)
-  const [toast, setToast] = useState<string | null>(null);
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const loadData = async () => {
-    setLoading(true);
-    const data = await getProducts();
-    setProducts(data);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Категории для фильтра
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach((p) => p.category && set.add(p.category));
-    return Array.from(set);
-  }, [products]);
-
-  // Статистика
-  const stats = useMemo(() => {
-    const total = products.length;
-    const inStock = products.filter((p) => p.inStock).length;
-    const outOfStock = total - inStock;
-    return { total, inStock, outOfStock, categoriesCount: categories.length };
-  }, [products, categories]);
-
-  // Фильтрация и сортировка
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter((p) => {
-        const matchesSearch =
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.category.toLowerCase().includes(search.toLowerCase()) ||
-          p.id.toString().includes(search);
-
-        const matchesCat = selectedCategory === 'all' || p.category === selectedCategory;
-        const matchesStock =
-          stockFilter === 'all' ||
-          (stockFilter === 'inStock' && p.inStock) ||
-          (stockFilter === 'outOfStock' && !p.inStock);
-
-        return matchesSearch && matchesCat && matchesStock;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'id-desc') return b.id - a.id;
-        if (sortBy === 'price-asc') return a.price - b.price;
-        if (sortBy === 'price-desc') return b.price - a.price;
-        if (sortBy === 'name') return a.name.localeCompare(b.name);
-        return 0;
-      });
-  }, [products, search, selectedCategory, stockFilter, sortBy]);
-
-  // Быстрый тумблер наличия прямо из списка
-  const handleToggleStock = async (id: number) => {
-    const res = await toggleProductStock(id);
-    if (res.success) {
-      setProducts((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, inStock: res.inStock! } : p))
-      );
-      showToast('Статус наличия обновлен');
+  const referer = hdrs.get('referer')
+  if (referer) {
+    try {
+      const match = new URL(referer).pathname.match(/^\/([a-zA-Z-]+)\/admin\b/)
+      if (match) return `/${match[1]}/admin`
+    } catch {
+      // Игнорируем некорректный referer
     }
-  };
+  }
 
-  // Дублирование
-  const handleDuplicate = async (id: number) => {
-    const res = await duplicateProduct(id);
-    if (res.success && res.newProduct) {
-      setProducts((prev) => [...prev, res.newProduct!]);
-      showToast('Товар успешно продублирован');
+  return '/admin'
+}
+
+export default async function AdminPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale?: string }>
+  searchParams: Promise<{
+    error?: string
+    status?: string
+    edit?: string
+    q?: string
+    category?: string
+    stock?: string
+    reviewTab?: string
+  }>
+}) {
+  const { locale } = await params
+  const sp = await searchParams
+  const safeLocale = locale?.replace(/[^a-zA-Z-]/g, '') || ''
+  const adminBase = safeLocale ? `/${safeLocale}/admin` : '/admin'
+  const catalogBase = safeLocale ? `/${safeLocale}/catalog` : '/catalog'
+
+  const session = await getAdminSession()
+
+  async function loginAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    const res = await loginAdmin(formData)
+    if (!res.ok) {
+      redirect(`${base}?error=${encodeURIComponent(res.error ?? 'Ошибка входа')}`)
     }
-  };
+    redirect(base)
+  }
 
-  // Удаление
-  const handleDelete = async (id: number, name: string) => {
-    if (confirm(`Удалить товар "${name}"?`)) {
-      await deleteProduct(id);
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-      showToast('Товар удален');
+  async function logoutAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    await logoutAdmin('local')
+    redirect(base)
+  }
+
+  async function logoutAllAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    await logoutAdmin('global')
+    redirect(`${base}?status=Все+сессии+завершены`)
+  }
+
+  async function createAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    let errorMsg: string | null = null
+    try {
+      await createProduct(formData)
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка создания товара'
     }
-  };
+    if (errorMsg) redirect(`${base}?error=${encodeURIComponent(errorMsg)}`)
+    redirect(`${base}?status=Товар+добавлен`)
+  }
 
-  const openCreateModal = () => {
-    setEditingProduct(null);
-    setIsDrawerOpen(true);
-  };
+  async function updateAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    const id = String(formData.get('id') ?? '')
+    let errorMsg: string | null = null
+    try {
+      await updateProduct(id, formData)
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка обновления товара'
+    }
+    if (errorMsg) redirect(`${base}?edit=${id}&error=${encodeURIComponent(errorMsg)}`)
+    redirect(`${base}?status=Изменения+сохранены`)
+  }
 
-  const openEditModal = (product: Product) => {
-    setEditingProduct(product);
-    setIsDrawerOpen(true);
-  };
+  async function toggleStockAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    const id = String(formData.get('id') ?? '')
+    let errorMsg: string | null = null
+    try {
+      await toggleProductStock(id)
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка смены статуса'
+    }
+    if (errorMsg) redirect(`${base}?error=${encodeURIComponent(errorMsg)}`)
+    redirect(`${base}?status=Статус+наличия+обновлён`)
+  }
+
+  async function duplicateAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    const id = String(formData.get('id') ?? '')
+    let newId: number | null = null
+    let errorMsg: string | null = null
+    try {
+      const copy = await duplicateProduct(id)
+      newId = copy.id
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка копирования'
+    }
+    if (errorMsg) redirect(`${base}?error=${encodeURIComponent(errorMsg)}`)
+    redirect(`${base}?edit=${newId}&status=Копия+создана.+Загрузите+для+неё+фото`)
+  }
+
+  async function deleteAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    const id = String(formData.get('id') ?? '')
+    let errorMsg: string | null = null
+    try {
+      await deleteProduct(id)
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка удаления товара'
+    }
+    if (errorMsg) redirect(`${base}?error=${encodeURIComponent(errorMsg)}`)
+    redirect(`${base}?status=Товар+удалён`)
+  }
+
+  async function makePrimaryImageAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    const id = String(formData.get('id') ?? '')
+    const imageUrl = String(formData.get('imageUrl') ?? '')
+    let errorMsg: string | null = null
+    try {
+      await makePrimaryProductImage(id, imageUrl)
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка смены главного фото'
+    }
+    if (errorMsg) redirect(`${base}?edit=${id}&error=${encodeURIComponent(errorMsg)}#editor`)
+    redirect(`${base}?edit=${id}&status=Главное+фото+обновлено#editor`)
+  }
+
+  async function deleteImageAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    const id = String(formData.get('id') ?? '')
+    const imageUrl = String(formData.get('imageUrl') ?? '')
+    let errorMsg: string | null = null
+    try {
+      await deleteProductImage(id, imageUrl)
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка удаления фото'
+    }
+    if (errorMsg) redirect(`${base}?edit=${id}&error=${encodeURIComponent(errorMsg)}#editor`)
+    redirect(`${base}?edit=${id}&status=Фото+удалено#editor`)
+  }
+
+  async function bulkAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    const ids = formData.getAll('ids').map(Number).filter((n) => Number.isSafeInteger(n) && n > 0)
+    const op = String(formData.get('op') ?? '')
+    const percent = Number(formData.get('percent') ?? 0)
+    const bulkCategory = String(formData.get('bulkCategory') ?? '')
+    let errorMsg: string | null = null
+
+    try {
+      if (ids.length === 0) throw new Error('Выберите хотя бы один товар')
+      if (op === 'stock_on') await bulkUpdateStock(ids, true)
+      else if (op === 'stock_off') await bulkUpdateStock(ids, false)
+      else if (op === 'discount') await bulkApplyDiscount(ids, percent)
+      else if (op === 'reset_discount') await bulkResetDiscount(ids)
+      else if (op === 'category') await bulkUpdateCategory(ids, bulkCategory)
+      else if (op === 'delete') await bulkDeleteProducts(ids)
+      else throw new Error('Выберите действие')
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка массового действия'
+    }
+
+    if (errorMsg) redirect(`${base}?error=${encodeURIComponent(errorMsg)}`)
+    redirect(`${base}?status=Массовое+действие+выполнено`)
+  }
+
+  async function moderateReviewAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    const id = String(formData.get('id') ?? '')
+    const status = String(formData.get('status') ?? '') as 'approved' | 'rejected' | 'pending'
+    const tab = String(formData.get('tab') ?? 'pending')
+    let errorMsg: string | null = null
+    try {
+      await moderateReview(id, status)
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка модерации'
+    }
+    if (errorMsg) redirect(`${base}?reviewTab=${tab}&error=${encodeURIComponent(errorMsg)}#reviews`)
+    redirect(`${base}?reviewTab=${tab}&status=Статус+отзыва+обновлён#reviews`)
+  }
+
+  async function approveAllAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    let count = 0
+    let errorMsg: string | null = null
+    try {
+      count = await approveAllPendingReviews()
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка одобрения'
+    }
+    if (errorMsg) redirect(`${base}?error=${encodeURIComponent(errorMsg)}#reviews`)
+    redirect(
+      `${base}?reviewTab=approved&status=${encodeURIComponent(`Одобрено отзывов: ${count}`)}#reviews`
+    )
+  }
+
+  async function deleteReviewAction(formData: FormData) {
+    'use server'
+    const base = await getLocaleAdminPath(formData)
+    const id = String(formData.get('id') ?? '')
+    const tab = String(formData.get('tab') ?? 'pending')
+    let errorMsg: string | null = null
+    try {
+      await deleteReview(id)
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Ошибка удаления отзыва'
+    }
+    if (errorMsg) redirect(`${base}?reviewTab=${tab}&error=${encodeURIComponent(errorMsg)}#reviews`)
+    redirect(`${base}?reviewTab=${tab}&status=Отзыв+удалён#reviews`)
+  }
+
+  // --- 1. Экран входа ---
+  if (!session) {
+    return (
+      <main className="min-h-screen bg-[#FAF7F2] text-[#2C2416] flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-white/80 border border-[#E8DCC8] rounded-2xl p-8 shadow-sm space-y-6">
+          <div className="space-y-2 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F4EFEA] text-[#C17B5C] text-xs font-mono uppercase tracking-wider">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Защищённый вход
+            </div>
+            <h1 className="text-3xl font-light font-serif">3d fabriq · Admin</h1>
+            <p className="text-sm text-[#6B5D4F]">
+              Доступ только для учётных записей с ролью администратора
+            </p>
+          </div>
+
+          {sp.error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+              {sp.error}
+            </div>
+          )}
+          {sp.status && (
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm">
+              {sp.status}
+            </div>
+          )}
+
+          <form action={loginAction} className="space-y-4">
+            <input type="hidden" name="locale" value={safeLocale} />
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-[#8C7E72] mb-1.5 font-mono">
+                Email
+              </label>
+              <input
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="admin@example.com"
+                className="w-full bg-white border border-[#E8DCC8] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#C17B5C]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-[#8C7E72] mb-1.5 font-mono">
+                Пароль
+              </label>
+              <input
+                name="password"
+                type="password"
+                required
+                autoComplete="current-password"
+                placeholder="••••••••"
+                className="w-full bg-white border border-[#E8DCC8] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#C17B5C]"
+              />
+            </div>
+
+            <SubmitButton
+              pendingText="Проверка..."
+              className="w-full bg-[#2C2416] hover:bg-[#C17B5C] text-[#FAF7F2] rounded-full py-3 text-sm font-medium transition-colors"
+            >
+              Войти в панель
+            </SubmitButton>
+          </form>
+
+          <div className="text-center pt-2 border-t border-[#E8DCC8]/60">
+            <Link href={catalogBase} className="text-xs text-[#6B5D4F] hover:text-[#C17B5C] underline">
+              ← Вернуться в каталог
+            </Link>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  // --- 2. Загрузка данных панели ---
+  const reviewTab: 'pending' | 'approved' | 'rejected' | 'all' =
+    sp.reviewTab === 'approved' || sp.reviewTab === 'rejected' || sp.reviewTab === 'all'
+      ? sp.reviewTab
+      : 'pending'
+
+  const [stats, filteredProducts, reviewData, editProduct] = await Promise.all([
+    getCatalogStats(),
+    getAllProducts({
+      search: sp.q || undefined,
+      category: sp.category || undefined,
+      inStock: sp.stock === 'in' ? true : sp.stock === 'out' ? false : undefined,
+      discountedOnly: sp.stock === 'discount',
+    }),
+    getAdminReviews(reviewTab),
+    sp.edit ? getProductById(sp.edit) : Promise.resolve(undefined),
+  ])
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20">
-      {/* Toast Notification */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium animate-bounce">
-          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-          {toast}
-        </div>
-      )}
-
-      {/* Верхняя навигация */}
-      <header className="sticky top-0 z-20 backdrop-blur-md bg-white/80 border-b border-slate-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
+    <main className="min-h-screen bg-[#FAF7F2] text-[#2C2416] pb-20">
+      {/* Шапка */}
+      <header className="border-b border-[#E8DCC8] bg-white/70 backdrop-blur-sm sticky top-0 z-30">
+        <div className="mx-auto max-w-7xl px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-md">
-              ⚡
-            </div>
+            <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#2C2416] text-[#FAF7F2]">
+              <ShieldCheck className="w-4 h-4" />
+            </span>
             <div>
-              <span className="font-bold text-slate-900 text-base leading-tight block">Админ-панель</span>
-              <span className="text-xs text-slate-400 font-medium">Каталог товаров (JSON)</span>
+              <h1 className="text-xl sm:text-2xl font-light font-serif leading-none">
+                3d fabriq · Админ-панель
+              </h1>
+              <p className="text-xs text-[#8C7E72] mt-1 font-mono">{session.email}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={openCreateModal}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-sm shadow-indigo-200 transition-all flex items-center gap-2 active:scale-95"
+          <div className="flex flex-wrap items-center gap-2.5 text-xs">
+            <Link
+              href={catalogBase}
+              className="inline-flex items-center gap-1.5 border border-[#E8DCC8] bg-white hover:border-[#C17B5C] rounded-full px-3.5 py-1.5 transition-colors"
             >
-              <svg className="w-4 h-4 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              <span>Добавить товар</span>
-            </button>
+              <span>Каталог</span>
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+
+            <form action={logoutAllAction}>
+              <input type="hidden" name="locale" value={safeLocale} />
+              <ConfirmButton
+                message="Завершить активные сессии на всех устройствах?"
+                pendingText="Выход..."
+                className="border border-[#E8DCC8] bg-white hover:border-red-400 text-[#6B5D4F] rounded-full px-3.5 py-1.5 transition-colors"
+              >
+                Выйти везде
+              </ConfirmButton>
+            </form>
 
             <form action={logoutAction}>
-              <button
-                type="submit"
-                title="Выйти из аккаунта"
-                className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition"
+              <input type="hidden" name="locale" value={safeLocale} />
+              <SubmitButton
+                pendingText="Выход..."
+                className="inline-flex items-center gap-1.5 bg-[#2C2416] hover:bg-[#C17B5C] text-[#FAF7F2] rounded-full px-4 py-1.5 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l3 3m0 0l-3 3m3-3H9" />
-                </svg>
-              </button>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Выйти</span>
+              </SubmitButton>
             </form>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-8 space-y-6">
-        {/* Карточки аналитики и остатков */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Всего товаров</span>
-            <div className="flex items-baseline justify-between mt-2">
-              <span className="text-3xl font-extrabold text-slate-900">{stats.total}</span>
-              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">в каталоге</span>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">В наличии</span>
-            <div className="flex items-baseline justify-between mt-2">
-              <span className="text-3xl font-extrabold text-emerald-600">{stats.inStock}</span>
-              <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md font-medium">готовы к продаже</span>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Нет на складе</span>
-            <div className="flex items-baseline justify-between mt-2">
-              <span className="text-3xl font-extrabold text-rose-600">{stats.outOfStock}</span>
-              <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-md font-medium">требуют пополнения</span>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Категорий</span>
-            <div className="flex items-baseline justify-between mt-2">
-              <span className="text-3xl font-extrabold text-indigo-600">{stats.categoriesCount}</span>
-              <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md font-medium">разных групп</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Панель фильтров и управления */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-          <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-            {/* Поиск */}
-            <div className="relative flex-1">
-              <svg className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Поиск по названию, ID или категории..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-slate-50 focus:bg-white border border-slate-200 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none transition"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {/* Фильтры и переключатели */}
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Фильтр по наличию */}
-              <select
-                value={stockFilter}
-                onChange={(e) => setStockFilter(e.target.value as StockFilter)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 outline-none cursor-pointer"
-              >
-                <option value="all">Все статусы</option>
-                <option value="inStock">Только в наличии</option>
-                <option value="outOfStock">Только не в наличии</option>
-              </select>
-
-              {/* Сортировка */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 outline-none cursor-pointer"
-              >
-                <option value="id-desc">Сначала новые</option>
-                <option value="price-asc">Цена: по возрастанию</option>
-                <option value="price-desc">Цена: по убыванию</option>
-                <option value="name">По алфавиту</option>
-              </select>
-
-              {/* Переключатель Таблица / Карточки */}
-              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-                <button
-                  onClick={() => setViewMode('table')}
-                  title="Вид: Таблица"
-                  className={`p-1.5 rounded-lg text-xs transition ${viewMode === 'table' ? 'bg-white shadow text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-900'}`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setViewMode('grid')}
-                  title="Вид: Сетка"
-                  className={`p-1.5 rounded-lg text-xs transition ${viewMode === 'grid' ? 'bg-white shadow text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-900'}`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Табы категорий */}
-          <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1 scrollbar-none">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition ${
-                selectedCategory === 'all'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              Все категории ({products.length})
-            </button>
-            {categories.map((cat) => {
-              const count = products.filter((p) => p.category === cat).length;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition ${
-                    selectedCategory === cat
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {cat} ({count})
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Контентная часть */}
-        {loading ? (
-          <div className="bg-white rounded-2xl p-16 text-center border border-slate-200">
-            <div className="inline-block animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full mb-3"></div>
-            <p className="text-slate-500 font-medium text-sm">Загружаем список товаров...</p>
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="bg-white rounded-2xl p-16 text-center border border-dashed border-slate-300">
-            <p className="text-slate-500 text-sm font-medium mb-3">По вашему запросу товары не найдены</p>
-            <button
-              onClick={() => {
-                setSearch('');
-                setSelectedCategory('all');
-                setStockFilter('all');
-              }}
-              className="text-indigo-600 font-semibold text-xs hover:underline"
-            >
-              Сбросить фильтры
-            </button>
-          </div>
-        ) : viewMode === 'table' ? (
-          /* ================= ТАБЛИЧНЫЙ ВИД ================= */
-          <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/75 border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 w-14">Фото</th>
-                    <th className="py-3.5 px-4">Название и ID</th>
-                    <th className="py-3.5 px-4">Категория</th>
-                    <th className="py-3.5 px-4">Цена</th>
-                    <th className="py-3.5 px-4">Наличие (в 1 клик)</th>
-                    <th className="py-3.5 px-4 text-right">Действия</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
-                  {filteredProducts.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-50/80 transition-colors group">
-                      {/* Фото */}
-                      <td className="py-3 px-4">
-                        <div className="w-12 h-12 rounded-xl bg-slate-100 border overflow-hidden shrink-0">
-                          {p.images[0] ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-300 text-xs">Нет</div>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Имя */}
-                      <td className="py-3 px-4">
-                        <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition">
-                          {p.name}
-                        </div>
-                        <div className="text-xs text-slate-400 font-mono">#{p.id}</div>
-                      </td>
-
-                      {/* Категория */}
-                      <td className="py-3 px-4">
-                        <span className="inline-block px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-600">
-                          {p.category}
-                        </span>
-                      </td>
-
-                      {/* Цена */}
-                      <td className="py-3 px-4">
-                        <div className="font-bold text-slate-900">{p.price} ₽</div>
-                        {p.oldPrice && (
-                          <div className="text-xs text-slate-400 line-through">{p.oldPrice} ₽</div>
-                        )}
-                      </td>
-
-                      {/* Тумблер наличия прямо в таблице */}
-                      <td className="py-3 px-4">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStock(p.id)}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition cursor-pointer ${
-                            p.inStock
-                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                              : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${p.inStock ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                          {p.inStock ? 'В наличии' : 'Нет на складе'}
-                        </button>
-                      </td>
-
-                      {/* Действия */}
-                      <td className="py-3 px-4 text-right">
-                        <div className="inline-flex items-center gap-1">
-                          <button
-                            onClick={() => openEditModal(p)}
-                            title="Редактировать"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleDuplicate(p.id)}
-                            title="Дублировать товар"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(p.id, p.name)}
-                            title="Удалить"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ) : (
-          /* ================= ВИД СЕТКОЙ (КАРТОЧКИ) ================= */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filteredProducts.map((p) => (
-              <div
-                key={p.id}
-                className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
-              >
-                <div>
-                  {/* Обложка */}
-                  <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
-                    {p.images[0] ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={p.images[0]}
-                        alt={p.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-300">Нет фото</div>
-                    )}
-                    <span className="absolute top-2.5 left-2.5 bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-bold px-2 py-0.5 rounded-md">
-                      #{p.id}
-                    </span>
-                    <button
-                      onClick={() => handleToggleStock(p.id)}
-                      className={`absolute top-2.5 right-2.5 text-[11px] font-semibold px-2 py-0.5 rounded-md shadow-sm transition ${
-                        p.inStock ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
-                      }`}
-                    >
-                      {p.inStock ? 'В наличии' : 'Нет на складе'}
-                    </button>
-                  </div>
-
-                  {/* Инфо */}
-                  <div className="p-4 space-y-2">
-                    <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400">
-                      {p.category}
-                    </span>
-                    <h3 className="font-bold text-slate-900 line-clamp-1">{p.name}</h3>
-
-                    <div className="flex items-baseline gap-2 pt-1">
-                      <span className="text-xl font-extrabold text-slate-900">{p.price} ₽</span>
-                      {p.oldPrice && (
-                        <span className="text-xs text-slate-400 line-through">{p.oldPrice} ₽</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Действия */}
-                <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-1">
-                  <button
-                    onClick={() => openEditModal(p)}
-                    className="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition"
-                  >
-                    Изменить
-                  </button>
-                  <button
-                    onClick={() => handleDuplicate(p.id)}
-                    title="Дублировать"
-                    className="p-1.5 text-slate-500 hover:text-emerald-600 rounded-lg hover:bg-white transition"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(p.id, p.name)}
-                    title="Удалить"
-                    className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-white transition"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 pt-6 space-y-8">
+        {/* Уведомления */}
+        {sp.error && (
+          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+            {sp.error}
           </div>
         )}
-      </main>
+        {sp.status && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm">
+            {sp.status}
+          </div>
+        )}
 
-      {/* ================= БОКОВАЯ ШТОРКА (DRAWER) ДЛЯ ФОРМЫ ================= */}
-      {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Затемнение фона */}
-          <div
-            onClick={() => setIsDrawerOpen(false)}
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
-          />
+        {/* KPI Статистика */}
+        <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="bg-white/70 border border-[#E8DCC8] rounded-xl p-4">
+            <span className="text-[11px] uppercase tracking-wider text-[#8C7E72] font-mono block">
+              Всего товаров
+            </span>
+            <span className="text-2xl font-serif mt-1 block">{stats.total}</span>
+          </div>
+          <div className="bg-white/70 border border-[#E8DCC8] rounded-xl p-4">
+            <span className="text-[11px] uppercase tracking-wider text-[#8C7E72] font-mono block">
+              В наличии
+            </span>
+            <span className="text-2xl font-serif text-emerald-700 mt-1 block">
+              {stats.inStock}
+            </span>
+          </div>
+          <div className="bg-white/70 border border-[#E8DCC8] rounded-xl p-4">
+            <span className="text-[11px] uppercase tracking-wider text-[#8C7E72] font-mono block">
+              Под заказ
+            </span>
+            <span className="text-2xl font-serif text-[#8C7E72] mt-1 block">
+              {stats.outOfStock}
+            </span>
+          </div>
+          <div className="bg-white/70 border border-[#E8DCC8] rounded-xl p-4">
+            <span className="text-[11px] uppercase tracking-wider text-[#8C7E72] font-mono block">
+              Со скидкой
+            </span>
+            <span className="text-2xl font-serif text-[#C17B5C] mt-1 block">
+              {stats.discounted}
+            </span>
+          </div>
+          <div className="bg-white/70 border border-[#E8DCC8] rounded-xl p-4">
+            <span className="text-[11px] uppercase tracking-wider text-[#8C7E72] font-mono block">
+              Средняя цена
+            </span>
+            <span className="text-2xl font-serif mt-1 block">{stats.avgPrice} Br</span>
+          </div>
+          <a
+            href="#reviews"
+            className={`border rounded-xl p-4 transition-colors ${
+              reviewData.counts.pending > 0
+                ? 'bg-[#C17B5C]/10 border-[#C17B5C]/50'
+                : 'bg-white/70 border-[#E8DCC8]'
+            }`}
+          >
+            <span className="text-[11px] uppercase tracking-wider text-[#8C7E72] font-mono block">
+              Отзывы (ждут)
+            </span>
+            <span className="text-2xl font-serif text-[#C17B5C] mt-1 block">
+              {reviewData.counts.pending}
+            </span>
+          </a>
+        </section>
 
-          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-3xl bg-white shadow-2xl overflow-y-auto">
-              <div className="p-6">
-                <ProductForm
-                  initialProduct={editingProduct}
-                  onSuccess={() => {
-                    setIsDrawerOpen(false);
-                    setEditingProduct(null);
-                    loadData();
-                    showToast('Товар успешно сохранен!');
-                  }}
-                  onCancel={() => {
-                    setIsDrawerOpen(false);
-                    setEditingProduct(null);
-                  }}
+        {/* Редактор / Создание товара */}
+        <section id="editor" className="bg-white/80 border border-[#E8DCC8] rounded-2xl p-5 sm:p-7 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E8DCC8]/70 pb-4">
+            <div>
+              <span className="text-[11px] uppercase tracking-wider text-[#8C7E72] font-mono block">
+                {editProduct ? `Редактирование #${editProduct.id}` : 'Новый товар'}
+              </span>
+              <h2 className="text-2xl font-light font-serif">
+                {editProduct ? editProduct.name : 'Добавить светильник'}
+              </h2>
+            </div>
+
+            {editProduct && (
+              <div className="flex items-center gap-3 text-xs">
+                <Link
+                  href={`${catalogBase}/${editProduct.id}`}
+                  className="inline-flex items-center gap-1 underline text-[#6B5D4F] hover:text-[#C17B5C]"
+                >
+                  Смотреть на сайте <ExternalLink className="w-3 h-3" />
+                </Link>
+                <Link
+                  href={adminBase}
+                  className="border border-[#E8DCC8] rounded-full px-3.5 py-1.5 hover:border-[#2C2416]"
+                >
+                  Отмена / Новый товар
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Управление существующими фото при редактировании */}
+          {editProduct && editProduct.images.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-xs uppercase tracking-wider text-[#8C7E72] font-mono block">
+                Текущие изображения ({editProduct.images.length})
+              </span>
+              <div className="flex flex-wrap gap-3">
+                {editProduct.images.map((url, idx) => (
+                  <div
+                    key={url}
+                    className="border border-[#E8DCC8] bg-[#FAF7F2] rounded-xl p-2 space-y-2 w-32"
+                  >
+                    <div className="relative aspect-square rounded-lg overflow-hidden bg-white">
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      {idx === 0 && (
+                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-[#C17B5C] text-[#FAF7F2] text-[10px] rounded-full font-mono">
+                          Главное
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1 text-[11px]">
+                      {idx !== 0 && (
+                        <form action={makePrimaryImageAction}>
+                          <input type="hidden" name="locale" value={safeLocale} />
+                          <input type="hidden" name="id" value={editProduct.id} />
+                          <input type="hidden" name="imageUrl" value={url} />
+                          <SubmitButton
+                            pendingText="..."
+                            className="w-full inline-flex items-center justify-center gap-1 py-1 rounded bg-white border border-[#E8DCC8] hover:border-[#C17B5C]"
+                          >
+                            <Star className="w-3 h-3" /> Главным
+                          </SubmitButton>
+                        </form>
+                      )}
+                      <form action={deleteImageAction}>
+                        <input type="hidden" name="locale" value={safeLocale} />
+                        <input type="hidden" name="id" value={editProduct.id} />
+                        <input type="hidden" name="imageUrl" value={url} />
+                        <ConfirmButton
+                          message="Удалить это фото из Storage?"
+                          pendingText="..."
+                          className="w-full inline-flex items-center justify-center gap-1 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100"
+                        >
+                          <Trash2 className="w-3 h-3" /> Удалить
+                        </ConfirmButton>
+                      </form>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Форма товара */}
+          <form
+            key={editProduct?.id ?? 'new'}
+            action={editProduct ? updateAction : createAction}
+            className="space-y-5"
+          >
+            <input type="hidden" name="locale" value={safeLocale} />
+            {editProduct && <input type="hidden" name="id" value={editProduct.id} />}
+
+            <datalist id="existing-categories">
+              {stats.categoryList.map((cat) => (
+                <option key={cat} value={cat} />
+              ))}
+            </datalist>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs text-[#8C7E72] mb-1">Название *</label>
+                <input
+                  name="name"
+                  required
+                  maxLength={200}
+                  defaultValue={editProduct?.name ?? ''}
+                  placeholder="Напр., Баскет Лонг"
+                  className="w-full bg-white border border-[#E8DCC8] rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-[#C17B5C]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-[#8C7E72] mb-1">Категория *</label>
+                <input
+                  name="category"
+                  required
+                  maxLength={100}
+                  list="existing-categories"
+                  defaultValue={editProduct?.category ?? 'Светильники'}
+                  className="w-full bg-white border border-[#E8DCC8] rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-[#C17B5C]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-[#8C7E72] mb-1">Наличие</label>
+                <select
+                  name="inStock"
+                  defaultValue={editProduct ? String(editProduct.inStock) : 'true'}
+                  className="w-full bg-white border border-[#E8DCC8] rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-[#C17B5C]"
+                >
+                  <option value="true">В наличии в мастерской</option>
+                  <option value="false">Под заказ (от 3 дней)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs text-[#8C7E72] mb-1">Цена (Br) *</label>
+                <input
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  defaultValue={editProduct?.price ?? ''}
+                  placeholder="120"
+                  className="w-full bg-white border border-[#E8DCC8] rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-[#C17B5C]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-[#8C7E72] mb-1">
+                  Старая цена (Br, для скидки)
+                </label>
+                <input
+                  name="oldPrice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  defaultValue={editProduct?.oldPrice ?? ''}
+                  placeholder="Оставьте пустым, если без скидки"
+                  className="w-full bg-white border border-[#E8DCC8] rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-[#C17B5C]"
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-1 text-xs text-[#8C7E72] mb-1">
+                  <ImagePlus className="w-3.5 h-3.5" />
+                  Фото (JPEG, PNG, WebP, до 5 МБ)
+                </label>
+                <input
+                  name="images"
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+                  className="w-full bg-white border border-[#E8DCC8] rounded-xl px-3 py-1.5 text-xs"
+                />
+                {editProduct && (
+                  <select
+                    name="imageMode"
+                    defaultValue="append"
+                    className="mt-1.5 w-full bg-white border border-[#E8DCC8] rounded-lg px-2.5 py-1 text-xs text-[#6B5D4F]"
+                  >
+                    <option value="append">Добавить к текущим фото</option>
+                    <option value="replace">Заменить все текущие фото</option>
+                  </select>
+                )}
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-[#8C7E72] mb-1">Описание</label>
+                <textarea
+                  name="description"
+                  rows={4}
+                  maxLength={5000}
+                  defaultValue={editProduct?.description ?? ''}
+                  placeholder="Описание товара..."
+                  className="w-full bg-white border border-[#E8DCC8] rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-[#C17B5C]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-[#8C7E72] mb-1">
+                  Особенности (каждый пункт с новой строки)
+                </label>
+                <textarea
+                  name="features"
+                  rows={4}
+                  defaultValue={editProduct?.features.join('\n') ?? ''}
+                  placeholder={'Высота 30см, ширина 16*16см\nЦоколь Е27\nДоступна в разных цветах.'}
+                  className="w-full bg-white border border-[#E8DCC8] rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-[#C17B5C]"
                 />
               </div>
             </div>
+
+            <details className="border border-[#E8DCC8]/80 rounded-xl p-4 bg-[#FAF7F2]/50">
+              <summary className="cursor-pointer text-xs uppercase tracking-wider text-[#6B5D4F] font-mono">
+                Дополнительные характеристики (specifications)
+              </summary>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+                <input
+                  name="specifications.brand"
+                  defaultValue={editProduct?.specifications.brand ?? ''}
+                  placeholder="Бренд"
+                  className="bg-white border border-[#E8DCC8] rounded-xl px-3 py-2 text-sm"
+                />
+                <input
+                  name="specifications.collection"
+                  defaultValue={editProduct?.specifications.collection ?? ''}
+                  placeholder="Коллекция"
+                  className="bg-white border border-[#E8DCC8] rounded-xl px-3 py-2 text-sm"
+                />
+                <input
+                  name="specifications.style"
+                  defaultValue={editProduct?.specifications.style ?? ''}
+                  placeholder="Стиль"
+                  className="bg-white border border-[#E8DCC8] rounded-xl px-3 py-2 text-sm"
+                />
+                <input
+                  name="specifications.room"
+                  defaultValue={editProduct?.specifications.room ?? ''}
+                  placeholder="Помещение"
+                  className="bg-white border border-[#E8DCC8] rounded-xl px-3 py-2 text-sm"
+                />
+                <input
+                  name="specifications.warranty"
+                  defaultValue={editProduct?.specifications.warranty ?? ''}
+                  placeholder="Гарантия"
+                  className="bg-white border border-[#E8DCC8] rounded-xl px-3 py-2 text-sm"
+                />
+                <input
+                  name="specifications.country"
+                  defaultValue={editProduct?.specifications.country ?? ''}
+                  placeholder="Страна производства"
+                  className="bg-white border border-[#E8DCC8] rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+            </details>
+
+            <SubmitButton
+              pendingText={editProduct ? 'Сохранение...' : 'Создание...'}
+              className="bg-[#2C2416] hover:bg-[#C17B5C] text-[#FAF7F2] rounded-full px-8 py-3 text-sm font-medium transition-colors"
+            >
+              {editProduct ? 'Сохранить изменения' : 'Создать товар'}
+            </SubmitButton>
+          </form>
+        </section>
+
+        {/* Поиск, фильтры и массовые действия */}
+        <section className="space-y-4">
+          <div className="bg-white/80 border border-[#E8DCC8] rounded-2xl p-4 flex flex-col lg:flex-row gap-4 justify-between">
+            <form method="GET" action={adminBase} className="flex flex-wrap gap-2 items-center">
+              <input
+                name="q"
+                defaultValue={sp.q ?? ''}
+                placeholder="Поиск по названию..."
+                className="bg-white border border-[#E8DCC8] rounded-xl px-3 py-1.5 text-sm w-48"
+              />
+              <select
+                name="category"
+                defaultValue={sp.category ?? ''}
+                className="bg-white border border-[#E8DCC8] rounded-xl px-3 py-1.5 text-sm"
+              >
+                <option value="">Все категории</option>
+                {stats.categoryList.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <select
+                name="stock"
+                defaultValue={sp.stock ?? 'all'}
+                className="bg-white border border-[#E8DCC8] rounded-xl px-3 py-1.5 text-sm"
+              >
+                <option value="all">Любой статус</option>
+                <option value="in">В наличии</option>
+                <option value="out">Под заказ</option>
+                <option value="discount">Со скидкой</option>
+              </select>
+              <button
+                type="submit"
+                className="border border-[#2C2416] text-[#2C2416] hover:bg-[#2C2416] hover:text-[#FAF7F2] rounded-xl px-3.5 py-1.5 text-sm transition-colors"
+              >
+                Найти
+              </button>
+              {(sp.q || sp.category || (sp.stock && sp.stock !== 'all')) && (
+                <Link href={adminBase} className="text-xs underline text-[#8C7E72] px-1">
+                  Сбросить
+                </Link>
+              )}
+            </form>
+
+            <form id="bulk-form" action={bulkAction} className="flex flex-wrap gap-2 items-center">
+              <input type="hidden" name="locale" value={safeLocale} />
+              <select
+                name="op"
+                className="bg-white border border-[#E8DCC8] rounded-xl px-3 py-1.5 text-sm"
+              >
+                <option value="">Массовые действия...</option>
+                <option value="stock_on">Поставить «В наличии»</option>
+                <option value="stock_off">Поставить «Под заказ»</option>
+                <option value="discount">Сделать скидку (%)</option>
+                <option value="reset_discount">Сбросить скидку</option>
+                <option value="category">Сменить категорию</option>
+                <option value="delete">Удалить выбранные</option>
+              </select>
+              <input
+                name="percent"
+                type="number"
+                min="1"
+                max="99"
+                placeholder="%"
+                className="bg-white border border-[#E8DCC8] rounded-xl px-2.5 py-1.5 text-sm w-16"
+              />
+              <input
+                name="bulkCategory"
+                list="existing-categories"
+                placeholder="Категория"
+                className="bg-white border border-[#E8DCC8] rounded-xl px-2.5 py-1.5 text-sm w-32"
+              />
+              <BulkSubmitButton className="bg-[#2C2416] hover:bg-[#C17B5C] text-[#FAF7F2] rounded-xl px-4 py-1.5 text-sm transition-colors" />
+            </form>
           </div>
-        </div>
-      )}
-    </div>
-  );
+
+          {/* Список товаров */}
+          <div className="bg-white/80 border border-[#E8DCC8] rounded-2xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#E8DCC8] bg-[#F4EFEA]/70 flex items-center justify-between text-xs uppercase tracking-wider text-[#8C7E72] font-mono">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <SelectAllCheckbox className="rounded" />
+                <span>Выбрать все ({filteredProducts.length})</span>
+              </label>
+              <span>Действия</span>
+            </div>
+
+            {filteredProducts.length === 0 ? (
+              <div className="p-12 text-center text-sm text-[#8C7E72]">
+                Товары не найдены.
+              </div>
+            ) : (
+              <div className="divide-y divide-[#E8DCC8]/70">
+                {filteredProducts.map((p) => {
+                  const discount =
+                    p.oldPrice && p.oldPrice > p.price
+                      ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)
+                      : null
+
+                  return (
+                    <div
+                      key={p.id}
+                      className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#FAF7F2]/60 transition-colors"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <input
+                          type="checkbox"
+                          name="ids"
+                          value={p.id}
+                          form="bulk-form"
+                          className="flex-shrink-0"
+                        />
+
+                        <div className="w-14 h-14 rounded-xl overflow-hidden bg-[#F4EFEA] border border-[#E8DCC8] flex-shrink-0">
+                          {p.images[0] ? (
+                            <img
+                              src={p.images[0]}
+                              alt={p.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[10px] text-[#8C7E72]">
+                              Нет фото
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Link
+                              href={`${catalogBase}/${p.id}`}
+                              className="font-medium font-serif text-base hover:text-[#C17B5C] truncate"
+                            >
+                              {p.name}
+                            </Link>
+                            <span className="text-[11px] font-mono text-[#8C7E72]">#{p.id}</span>
+                            {discount && (
+                              <span className="px-2 py-0.5 rounded-full bg-[#C17B5C] text-[#FAF7F2] text-[10px] font-mono">
+                                -{discount}%
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="text-xs text-[#6B5D4F] mt-0.5 flex flex-wrap gap-x-3 gap-y-1">
+                            <span>{p.category}</span>
+                            <span className="font-medium text-[#2C2416]">
+                              {p.price} Br
+                              {p.oldPrice ? (
+                                <span className="ml-1.5 line-through text-[#8C7E72] font-normal">
+                                  {p.oldPrice} Br
+                                </span>
+                              ) : null}
+                            </span>
+                            <span className="text-[#8C7E72]">Фото: {p.images.length}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                        <form action={toggleStockAction}>
+                          <input type="hidden" name="locale" value={safeLocale} />
+                          <input type="hidden" name="id" value={p.id} />
+                          <SubmitButton
+                            pendingText="..."
+                            className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                              p.inStock
+                                ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                                : 'bg-[#F4EFEA] border-[#E8DCC8] text-[#6B5D4F] hover:border-[#2C2416]'
+                            }`}
+                          >
+                            {p.inStock ? 'В наличии' : 'Под заказ'}
+                          </SubmitButton>
+                        </form>
+
+                        <Link
+                          href={`${adminBase}?edit=${p.id}#editor`}
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-[#E8DCC8] bg-white hover:border-[#C17B5C]"
+                        >
+                          <Pencil className="w-3 h-3" /> Изменить
+                        </Link>
+
+                        <form action={duplicateAction}>
+                          <input type="hidden" name="locale" value={safeLocale} />
+                          <input type="hidden" name="id" value={p.id} />
+                          <SubmitButton
+                            pendingText="..."
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-[#E8DCC8] bg-white hover:border-[#2C2416]"
+                          >
+                            <Copy className="w-3 h-3" /> Копия
+                          </SubmitButton>
+                        </form>
+
+                        <form action={deleteAction}>
+                          <input type="hidden" name="locale" value={safeLocale} />
+                          <input type="hidden" name="id" value={p.id} />
+                          <ConfirmButton
+                            message={`Удалить "${p.name}" и все его изображения?`}
+                            pendingText="..."
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+                          >
+                            <Trash2 className="w-3 h-3" /> Удалить
+                          </ConfirmButton>
+                        </form>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Модерация оценок и отзывов */}
+        <section id="reviews" className="bg-white/80 border border-[#E8DCC8] rounded-2xl p-5 sm:p-7 space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E8DCC8]/70 pb-4">
+            <div className="flex items-center gap-2.5">
+              <MessageSquare className="w-5 h-5 text-[#C17B5C]" />
+              <div>
+                <span className="text-[11px] uppercase tracking-wider text-[#8C7E72] font-mono block">
+                  Премодерация
+                </span>
+                <h2 className="text-2xl font-light font-serif">Оценки и отзывы</h2>
+              </div>
+            </div>
+
+            {reviewData.counts.pending > 0 && (
+              <form action={approveAllAction}>
+                <input type="hidden" name="locale" value={safeLocale} />
+                <ConfirmButton
+                  message={`Одобрить все ожидающие отзывы (${reviewData.counts.pending} шт.)?`}
+                  pendingText="Одобрение..."
+                  className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-full px-4 py-1.5 text-xs transition-colors"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  Одобрить все ({reviewData.counts.pending})
+                </ConfirmButton>
+              </form>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-xs">
+            {(
+              [
+                ['pending', `Ожидают (${reviewData.counts.pending})`],
+                ['approved', `Одобренные (${reviewData.counts.approved})`],
+                ['rejected', `Отклонённые (${reviewData.counts.rejected})`],
+                ['all', `Все (${reviewData.counts.total})`],
+              ] as const
+            ).map(([key, label]) => (
+              <Link
+                key={key}
+                href={`${adminBase}?reviewTab=${key}#reviews`}
+                className={`px-3.5 py-1.5 rounded-full border transition-colors ${
+                  reviewTab === key
+                    ? 'bg-[#2C2416] text-[#FAF7F2] border-[#2C2416]'
+                    : 'bg-white border-[#E8DCC8] text-[#6B5D4F] hover:border-[#C17B5C]'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          {reviewData.reviews.length === 0 ? (
+            <p className="text-sm text-[#8C7E72] py-6 text-center">
+              В этой вкладке пока нет отзывов.
+            </p>
+          ) : (
+            <div className="divide-y divide-[#E8DCC8]/70 border border-[#E8DCC8] rounded-xl overflow-hidden bg-white">
+              {reviewData.reviews.map((rev) => (
+                <div
+                  key={rev.id}
+                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1.5 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <span
+                        className={`px-2 py-0.5 rounded-full font-mono text-[10px] uppercase ${
+                          rev.status === 'approved'
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            : rev.status === 'rejected'
+                            ? 'bg-red-50 text-red-700 border border-red-200'
+                            : 'bg-amber-50 text-amber-800 border border-amber-200'
+                        }`}
+                      >
+                        {rev.status === 'approved'
+                          ? 'Одобрен'
+                          : rev.status === 'rejected'
+                          ? 'Отклонён'
+                          : 'Ожидает'}
+                      </span>
+
+                      <span className="inline-flex items-center gap-0.5 text-[#C17B5C]">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3.5 h-3.5 ${
+                              i < rev.rating ? 'fill-[#C17B5C] text-[#C17B5C]' : 'text-[#E8DCC8]'
+                            }`}
+                          />
+                        ))}
+                      </span>
+
+                      <span className="font-semibold text-[#2C2416]">{rev.authorName}</span>
+                      <span className="text-[#8C7E72] font-mono">
+                        {new Date(rev.createdAt).toLocaleDateString('ru-RU')}
+                      </span>
+                      <Link
+                        href={`${catalogBase}/${rev.productId}`}
+                        className="underline text-[#6B5D4F] hover:text-[#C17B5C]"
+                      >
+                        {rev.productName ?? `Товар #${rev.productId}`}
+                      </Link>
+                    </div>
+
+                    {rev.comment ? (
+                      <p className="text-sm text-[#2C2416] leading-relaxed">{rev.comment}</p>
+                    ) : (
+                      <p className="text-xs italic text-[#8C7E72]">Только оценка без комментария</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+                    {rev.status !== 'approved' && (
+                      <form action={moderateReviewAction}>
+                        <input type="hidden" name="locale" value={safeLocale} />
+                        <input type="hidden" name="id" value={rev.id} />
+                        <input type="hidden" name="status" value="approved" />
+                        <input type="hidden" name="tab" value={reviewTab} />
+                        <SubmitButton
+                          pendingText="..."
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+                        >
+                          <Check className="w-3.5 h-3.5" /> Одобрить
+                        </SubmitButton>
+                      </form>
+                    )}
+
+                    {rev.status !== 'rejected' && (
+                      <form action={moderateReviewAction}>
+                        <input type="hidden" name="locale" value={safeLocale} />
+                        <input type="hidden" name="id" value={rev.id} />
+                        <input type="hidden" name="status" value="rejected" />
+                        <input type="hidden" name="tab" value={reviewTab} />
+                        <SubmitButton
+                          pendingText="..."
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-[#F4EFEA] text-[#6B5D4F] border border-[#E8DCC8] hover:border-[#2C2416]"
+                        >
+                          <X className="w-3.5 h-3.5" /> Отклонить
+                        </SubmitButton>
+                      </form>
+                    )}
+
+                    <form action={deleteReviewAction}>
+                      <input type="hidden" name="locale" value={safeLocale} />
+                      <input type="hidden" name="id" value={rev.id} />
+                      <input type="hidden" name="tab" value={reviewTab} />
+                      <ConfirmButton
+                        message="Удалить этот отзыв навсегда?"
+                        pendingText="..."
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Удалить
+                      </ConfirmButton>
+                    </form>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  )
 }
