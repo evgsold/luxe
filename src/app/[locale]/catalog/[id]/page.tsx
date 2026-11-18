@@ -31,11 +31,15 @@ export default async function ProductPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ locale?: string; id: string }>
   searchParams: Promise<{ reviewStatus?: string; reviewError?: string }>
 }) {
-  const { id } = await params
+  const { locale, id } = await params
   const sp = await searchParams
+  const safeLocale = locale?.replace(/[^a-zA-Z-]/g, "") || ""
+  const catalogBase = safeLocale ? `/${safeLocale}/catalog` : "/catalog"
+  const contactHref = safeLocale ? `/${safeLocale}/contact` : "/contact"
+
   const product = await getProductById(id)
 
   if (!product) {

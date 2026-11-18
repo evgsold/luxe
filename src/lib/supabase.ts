@@ -42,6 +42,15 @@ export interface ProductReviewRow {
   products?: { name: string } | Array<{ name: string }> | null
 }
 
+export interface ProductSpecifications {
+  brand?: string
+  collection?: string
+  style?: string
+  room?: string
+  warranty?: string
+  country?: string
+}
+
 export const STORAGE_BUCKET = 'products'
 export const ACCESS_COOKIE = 'sb-access-token'
 export const REFRESH_COOKIE = 'sb-refresh-token'
@@ -350,7 +359,7 @@ export async function uploadImages(files: File[]): Promise<string[]> {
     return publicUrls
   } catch (err) {
     if (uploadedPaths.length > 0) {
-      await supabase.storage.from(STORAGE_BUCKET).remove(uploadedPaths).catch(() => {})
+      await supabase.storage.from(STORAGE_BUCKET).remove(uploadedPaths).catch(() => undefined)
     }
     throw err
   }

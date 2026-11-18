@@ -151,7 +151,7 @@ export async function createProduct(formData: FormData): Promise<Product> {
     safeRevalidate(product.id)
     return product
   } catch (err) {
-    if (uploadedUrls.length > 0) await deleteImagesByUrls(uploadedUrls).catch(() => {})
+    if (uploadedUrls.length > 0) await deleteImagesByUrls(uploadedUrls).catch(() => undefined)
     throw err
   }
 }
@@ -246,14 +246,14 @@ export async function updateProduct(
     if (error) throw new Error(error.message)
 
     if (imagesToDelete.length > 0) {
-      await deleteImagesByUrls(imagesToDelete).catch(() => {})
+      await deleteImagesByUrls(imagesToDelete).catch(() => undefined)
     }
 
     const product = toProduct(updated as ProductRow)
     safeRevalidate(product.id)
     return product
   } catch (err) {
-    if (uploadedUrls.length > 0) await deleteImagesByUrls(uploadedUrls).catch(() => {})
+    if (uploadedUrls.length > 0) await deleteImagesByUrls(uploadedUrls).catch(() => undefined)
     throw err
   }
 }
@@ -275,7 +275,7 @@ export async function deleteProduct(id: string | number): Promise<boolean> {
 
   const images = (data as { images: string[] | null }).images
   if (images?.length) {
-    await deleteImagesByUrls(images).catch(() => {})
+    await deleteImagesByUrls(images).catch(() => undefined)
   }
 
   safeRevalidate(numId)
@@ -312,7 +312,7 @@ export async function deleteProductImage(
 
   if (error) throw new Error(error.message)
 
-  await deleteImagesByUrls([imageUrl]).catch(() => {})
+  await deleteImagesByUrls([imageUrl]).catch(() => undefined)
   safeRevalidate(numId)
   return toProduct(updated as ProductRow)
 }
@@ -470,7 +470,7 @@ export async function bulkDeleteProducts(ids: number[]): Promise<void> {
 
   const allImages = (data ?? []).flatMap((r) => (r as { images: string[] | null }).images ?? [])
   if (allImages.length > 0) {
-    await deleteImagesByUrls(allImages).catch(() => {})
+    await deleteImagesByUrls(allImages).catch(() => undefined)
   }
   safeRevalidate()
 }
