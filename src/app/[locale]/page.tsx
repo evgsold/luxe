@@ -121,7 +121,7 @@ export default async function HomePage() {
                   className="text-5xl sm:text-6xl lg:text-7xl font-light tracking-tight leading-[1.08] mb-8 font-serif"
                 >
                   Свет как форма <br />
-                  <span className="italic font-normal text-[#C17B5C]">современного уюта</span>
+                  <span className="font-normal text-[#C17B5C]">современного уюта</span>
                 </h1>
 
                 <p

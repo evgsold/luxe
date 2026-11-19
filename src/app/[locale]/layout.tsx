@@ -137,7 +137,10 @@ export default async function RootLayout({
   const organizationSchema = generateStructuredData('Organization', {});
 
   return (
-    <html lang={locale}>
+    <html 
+    lang={locale}
+    className={`${introFriday.variable} ${patefon.variable}`}
+    >
       <head>
         {/* 5. Внедряем структурированные данные в <head> */}
         <script
